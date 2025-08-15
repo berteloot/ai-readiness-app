@@ -18,88 +18,6 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
   const generatePDF = async () => {
     const { score, tier, breakdown, maxScore } = result;
 
-    // Create a temporary container for PDF generation
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '595px'; // A4 width in points
-    container.style.padding = '20px';
-    container.style.background = '#ffffff';
-    container.style.fontFamily = 'Arial, sans-serif';
-    container.style.color = '#000000';
-    container.style.fontSize = '12px';
-    container.style.lineHeight = '1.4';
-    
-    // Helper functions
-    const escapeHTML = (s: string): string => {
-      return s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    };
-
-    const splitIntoParagraphs = (s: string): string[] => {
-      return s
-        .split(/\n\s*\n|(?=^#{1,6}\s)/gm)
-        .map((t) => t.trim())
-        .filter(Boolean);
-    };
-
-    // Build the HTML content without CSS page breaks
-    container.innerHTML = `
-      <div style="margin-bottom: 20px;">
-        <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 10px 0; color: #1f2937;">
-          AI Readiness Assessment Report
-        </h1>
-        <h2 style="font-size: 18px; font-weight: 600; margin: 0 0 5px 0; color: #374151;">
-          ${company || 'Your Company'}
-        </h2>
-        <p style="font-size: 12px; color: #6b7280; margin: 0;">
-          Generated on ${new Date().toLocaleDateString()}
-        </p>
-      </div>
-
-      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 10px 0; color: #1f2937;">
-          Overall Score
-        </h3>
-        <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;">
-          <span style="font-size: 32px; font-weight: bold; color: #2563eb;">${score}</span>
-          <span style="font-size: 14px; color: #374151;">out of ${maxScore} points</span>
-        </div>
-        <div style="font-size: 16px; color: #059669; font-weight: 600;">${tier}</div>
-      </div>
-
-      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 10px 0; color: #1f2937;">
-          Score Breakdown by Section
-        </h3>
-        ${Object.entries(breakdown)
-          .map(
-            ([k, v]) =>
-              `<div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb; font-size: 12px;">
-                <span>${getSectionName(k)}</span>
-                <span style="font-family: monospace; font-weight: 600;">${v}/${getMaxScore(k)}</span>
-              </div>`
-          )
-          .join('')}
-      </div>
-
-      <div style="margin-top: 30px;">
-        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937;">
-          Executive Summary
-        </h3>
-        ${splitIntoParagraphs(aiReport)
-          .map((para) => `<p style="margin: 0 0 12px 0; text-align: justify;">${escapeHTML(para)}</p>`)
-          .join('')}
-      </div>
-    `;
-
-    document.body.appendChild(container);
-
     try {
       const doc = new jsPDF({
         unit: 'pt',
@@ -107,38 +25,138 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
         compress: true,
       });
 
-      // Use html2canvas with optimized settings
-      await doc.html(container, {
-        x: 20,
-        y: 20,
-        width: 555, // A4 width minus margins
-        html2canvas: {
-          scale: 1,
-          backgroundColor: '#ffffff',
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          width: 595,
-          height: container.scrollHeight,
-        },
-        callback: function(doc) {
-          // Set document properties
-          doc.setProperties({
-            title: `AI-Readiness-Report-${company || 'Your Company'}`,
-            subject: 'AI Readiness Assessment',
-            author: 'Lean Solutions Group',
-          });
-          
-          // Save the PDF
-          doc.save(`AI-Readiness-Report-${(company || 'Your Company').replace(/\s+/g, '-')}.pdf`);
-        }
+      // Set up fonts and colors
+      doc.setFont('helvetica');
+      doc.setTextColor(0, 0, 0);
+
+      // Page dimensions
+      const pageWidth = 595.28;
+      const pageHeight = 841.89;
+      const margin = 40;
+      const contentWidth = pageWidth - (2 * margin);
+      let yPosition = margin + 30;
+
+      // Title
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('AI Readiness Assessment Report', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 40;
+
+      // Company name
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(company || 'Your Company', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 30;
+
+      // Date
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 40;
+
+      // Overall Score Section
+      doc.setFillColor(249, 250, 251);
+      doc.rect(margin, yPosition - 20, contentWidth, 80, 'F');
+      doc.setDrawColor(229, 231, 235);
+      doc.rect(margin, yPosition - 20, contentWidth, 80, 'S');
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('Overall Score', margin + 20, yPosition);
+      yPosition += 25;
+
+      // Score display
+      doc.setFontSize(28);
+      doc.setTextColor(37, 99, 235);
+      doc.text(score.toString(), margin + 20, yPosition);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(55, 65, 81);
+      doc.text(`out of ${maxScore} points`, margin + 80, yPosition);
+      yPosition += 20;
+
+      doc.setFontSize(14);
+      doc.setTextColor(5, 150, 105);
+      doc.text(tier, margin + 20, yPosition);
+      yPosition += 60;
+
+      // Score Breakdown Section
+      doc.setFillColor(249, 250, 251);
+      doc.rect(margin, yPosition - 20, contentWidth, 120, 'F');
+      doc.setDrawColor(229, 231, 235);
+      doc.rect(margin, yPosition - 20, contentWidth, 120, 'S');
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('Score Breakdown by Section', margin + 20, yPosition);
+      yPosition += 25;
+
+      // Breakdown items
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      Object.entries(breakdown).forEach(([key, value]) => {
+        const sectionName = getSectionName(key);
+        const maxSectionScore = getMaxScore(key);
+        
+        doc.setTextColor(31, 41, 55);
+        doc.text(sectionName, margin + 20, yPosition);
+        
+        doc.setTextColor(37, 99, 235);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${value}/${maxSectionScore}`, margin + contentWidth - 20, yPosition, { align: 'right' });
+        
+        yPosition += 15;
       });
+
+      yPosition += 30;
+
+      // Executive Summary
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('Executive Summary', margin, yPosition);
+      yPosition += 25;
+
+      // AI Report content
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+
+      const paragraphs = aiReport.split(/\n\s*\n/).filter(p => p.trim());
+      
+      paragraphs.forEach((paragraph) => {
+        const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 20);
+        
+        // Check if we need a new page
+        if (yPosition + (lines.length * 12) > pageHeight - margin) {
+          doc.addPage();
+          yPosition = margin + 30;
+        }
+        
+        lines.forEach((line: string) => {
+          doc.text(line, margin + 10, yPosition);
+          yPosition += 12;
+        });
+        
+        yPosition += 8; // Space between paragraphs
+      });
+
+      // Set document properties
+      doc.setProperties({
+        title: `AI-Readiness-Report-${company || 'Your Company'}`,
+        subject: 'AI Readiness Assessment',
+        author: 'Lean Solutions Group',
+      });
+
+      // Save the PDF
+      doc.save(`AI-Readiness-Report-${(company || 'Your Company').replace(/\s+/g, '-')}.pdf`);
+
     } catch (error) {
       console.error('PDF generation error:', error);
       alert('Error generating PDF. Please try again.');
-    } finally {
-      // Cleanup
-      document.body.removeChild(container);
     }
   };
 
