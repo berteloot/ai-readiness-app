@@ -161,6 +161,7 @@ export default function Home() {
           onSubmit={handleContactSubmit}
           isLoading={isLoading}
           result={result}
+          assessmentData={assessmentData}
         />
       )}
     </div>

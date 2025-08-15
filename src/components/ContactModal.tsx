@@ -25,9 +25,12 @@ interface ContactModalProps {
     maxScore: number;
     aiReport?: string;
   } | null;
+  assessmentData?: {
+    company?: string;
+  } | null;
 }
 
-export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, result }: ContactModalProps) {
+export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, result, assessmentData }: ContactModalProps) {
   const {
     register,
     handleSubmit,
@@ -140,14 +143,14 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Score Display */}
               <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                <div className="text-4xl font-bold text-blue-600 mb-2">{result.score}</div>
-                <div className="text-lg text-gray-700 mb-2">out of {result.maxScore} points</div>
+                <div className="text-4xl font-bold text-blue-600 mb-2">{result.score || 'N/A'}</div>
+                <div className="text-lg text-gray-700 mb-2">out of {result.maxScore || 29} points</div>
                 <div className="text-base text-gray-600">Total Score</div>
               </div>
               
               {/* Tier Display */}
               <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200">
-                <div className="text-2xl font-bold text-green-600 mb-2">{result.tier}</div>
+                <div className="text-2xl font-bold text-green-600 mb-2">{result.tier || 'N/A'}</div>
                 <div className="text-lg text-gray-700 mb-2">Readiness Tier</div>
                 <div className="text-base text-gray-600">Your Current Level</div>
               </div>
@@ -181,7 +184,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
               <PDFGenerator 
                 result={result} 
                 aiReport={result.aiReport || ''} 
-                company="Your Company" 
+                company={assessmentData?.company || 'Your Company'} 
               />
             </div>
           </>
