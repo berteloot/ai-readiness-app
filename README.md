@@ -60,6 +60,9 @@ REPORT_FROM_NAME=AI Readiness Reports
 
 # App Configuration
 SITE_URL=http://localhost:3000
+
+# Admin Access
+ADMIN_PASSWORD=your_secure_admin_password_here
 ```
 
 ### 3. Run Development Server
@@ -68,6 +71,17 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+## 🔐 Admin Panel
+
+The app includes a secure admin panel at `/admin` that provides:
+
+- **Secure Access**: Password-protected using `ADMIN_PASSWORD` environment variable
+- **Data Viewing**: Browse all assessment submissions in a table format
+- **CSV Export**: Download submissions data for HubSpot or other CRM imports
+- **Submission Details**: View scores, tiers, pain points, and AI reports
+
+**Security Note**: Always use a strong, unique password for the admin panel in production.
 
 ## 📋 Assessment Structure
 

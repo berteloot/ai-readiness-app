@@ -20,6 +20,7 @@ SENDGRID_API_KEY = [Your SendGrid API key]
 SENDGRID_FROM_EMAIL = [Your verified sender email in SendGrid]
 SENDGRID_FROM_NAME = AI Readiness Reports
 SITE_URL = [Your Render app URL after deployment]
+ADMIN_PASSWORD = [Your chosen admin password for /admin access]
 ```
 
 ### Optional Variables
@@ -43,12 +44,16 @@ OPENAI_MODEL = gpt-4o-mini
 4. **Test**: Visit your app and test the assessment form
 5. **Admin Access**: Visit `/admin` to download CSV exports
 
-## CSV Export for HubSpot
+## Admin Panel
 
 The admin panel at `/admin` provides:
+- Secure password-protected access
+- View all submissions in a table format
 - Download all submissions as CSV
 - Includes: date, email, company, score, tier, email status, pain points, AI report
 - Perfect for HubSpot contact import
+
+**Important**: Set the `ADMIN_PASSWORD` environment variable in Render to secure access to the admin panel.
 
 ## Troubleshooting
 

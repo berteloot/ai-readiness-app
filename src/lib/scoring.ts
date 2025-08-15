@@ -8,6 +8,7 @@ export type Answers = {
   q7: string;   // Section 7 single - Budget & Executive Buy-In (0-4 points)
   q8: string[]; // Section 8 multi - Pain Points (non-scored, max 3 selections)
   q9: string;   // Section 9 single - Urgency Assessment (non-scored)
+  // Total maximum score: 8 + 4 + 4 + 4 + 5 + 6 + 4 = 35 points
 };
 
 export type ScoreResult = { 
@@ -69,11 +70,11 @@ export function scoreAnswers(a: Answers): ScoreResult {
   };
   const s7 = mapQ7[a.q7] ?? 0;
 
-  const score = s1 + s2 + s3 + s4 + s5 + s6 + s7; // max 29
-  const maxScore = 29;
+  const score = s1 + s2 + s3 + s4 + s5 + s6 + s7; // max 35
+  const maxScore = 35;
   
   // Tier classification based on LSG questionnaire
-  const tier = score >= 21 ? "AI-Enhanced" : score >= 11 ? "Getting Started" : "Not Ready Yet";
+  const tier = score >= 25 ? "AI-Enhanced" : score >= 15 ? "Getting Started" : "Not Ready Yet";
   
   return { 
     score, 

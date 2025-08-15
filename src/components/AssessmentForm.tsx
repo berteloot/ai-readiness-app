@@ -14,7 +14,7 @@ const formSchema = z.object({
   q5: z.array(z.string()).min(1, 'Please select at least one option'),
   q6: z.array(z.string()).min(1, 'Please select at least one option'),
   q7: z.string().min(1, 'Please select an option'),
-  q8: z.array(z.string()).max(3, 'Please select up to 3 options'),
+  q8: z.array(z.string()).min(1, 'Please select at least one option'),
   q9: z.string().min(1, 'Please select an option'),
 });
 
@@ -120,12 +120,29 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
         return (
           <div className="space-y-4">
             <div className="question-type-multi mb-6 p-3 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <span className="font-medium">Multiple Choice - Select all that apply</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <span className="font-medium">Multiple Choice - Select all that apply</span>
+                </div>
+                {question.maxSelections && (
+                  <div className="text-sm text-gray-600">
+                    {Array.isArray(currentValue) ? currentValue.length : 0} of {question.maxSelections} selected
+                  </div>
+                )}
               </div>
+              {question.maxSelections && (
+                <div className="mt-3">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-accent-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${((Array.isArray(currentValue) ? currentValue.length : 0) / question.maxSelections) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
             </div>
             
             <fieldset className="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 p-6">
@@ -136,6 +153,9 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                     Array.isArray(currentValue) && 
                     currentValue.length >= question.maxSelections && 
                     !isSelected);
+                  const isMaxReached = Boolean(question.maxSelections && 
+                    Array.isArray(currentValue) && 
+                    currentValue.length >= question.maxSelections);
                   const isNoneOption = option.value === 'none';
                   
                   return (
@@ -173,7 +193,9 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
               <div className="mt-4 text-sm text-gray-600">
                 {Array.isArray(currentValue) && currentValue.includes('none')
                   ? "You selected None of the above, so other options are disabled."
-                  : "You can select multiple options. Selecting any option will deselect None of the above."}
+                  : question.maxSelections 
+                    ? `You can select up to ${question.maxSelections} options. Selecting any option will deselect None of the above.`
+                    : "You can select multiple options. Selecting any option will deselect None of the above."}
               </div>
             </fieldset>
           </div>
