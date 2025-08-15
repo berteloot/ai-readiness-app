@@ -8,6 +8,7 @@ import { questions } from '@/data/questions';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
+  company: z.string().min(1, 'Please enter your company name'),
   consent: z.boolean().refine(val => val === true, 'You must consent to receive your report'),
   q1: z.array(z.string()).min(1, 'Please select at least one option'),
   q2: z.string().min(1, 'Please select an option'),
@@ -41,6 +42,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      company: '',
       q1: [],
       q5: [],
       q6: [],
@@ -335,6 +337,22 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                     />
                     {errors.email && (
                       <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Company Name
+                    </label>
+                    <input
+                      {...register('company')}
+                      type="text"
+                      id="company"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                      placeholder="Your Company"
+                    />
+                    {errors.company && (
+                      <p className="mt-2 text-sm text-red-600">{errors.company.message}</p>
                     )}
                   </div>
 
