@@ -39,7 +39,6 @@ export default function Home() {
   const handleContactSubmit = async (contactData: ContactData) => {
     setIsLoading(true);
     setError('');
-    setShowContactModal(false);
     
     try {
       const response = await fetch('/api/submit', {
@@ -64,200 +63,15 @@ export default function Home() {
     }
   };
 
-  if (result) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 py-8 sm:py-12">
-        <div className="max-w-4xl mx-auto mobile-optimized relative">
-          {/* PDF Download Button - Top Right */}
-          <div className="absolute top-0 right-0 z-10">
-            <PDFGenerator 
-              result={{
-                score: result.score,
-                tier: result.tier,
-                breakdown: result.breakdown || {},
-                maxScore: result.maxScore || 29
-              }} 
-              aiReport={result.aiReport || ''} 
-              company={result.company || 'Your Company'} 
-            />
-          </div>
-
-          {/* Success Header */}
-          <div className="text-center mb-8 sm:mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full mb-4 sm:mb-6">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Assessment Complete! 🎉
-            </h1>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-              Your AI Readiness report has been generated and sent to your email. 
-              Check your inbox for detailed insights and actionable recommendations.
-            </p>
-          </div>
-
-          {/* Results Card */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 mb-8 sm:mb-12 border border-gray-100">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">Your Results</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
-              {/* Score Display */}
-              <div className="text-center p-6 sm:p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                <div className="text-4xl sm:text-5xl md:text-6xl font-bold text-blue-600 mb-2 sm:mb-3">
-                  {result.score}
-                </div>
-                <div className="text-lg sm:text-xl md:text-2xl text-gray-700 mb-2">out of 29</div>
-                <div className="text-base sm:text-lg text-gray-600">Total Score</div>
-                <div className="mt-3 sm:mt-4 text-sm text-blue-700 font-medium">
-                  {result.message || 'Score calculated based on your responses'}
-                </div>
-              </div>
-              
-              {/* Tier Display */}
-              <div className="text-center p-6 sm:p-8 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200">
-                <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2 sm:mb-3">
-                  {result.tier}
-                </div>
-                <div className="text-lg sm:text-xl text-gray-700 mb-2">Readiness Tier</div>
-                <div className="text-base sm:text-lg text-gray-600">Your Current Level</div>
-                <div className="mt-3 sm:mt-4 text-sm text-green-700 font-medium">
-                  {result.tier === 'AI-Enhanced' && 'Ready for advanced AI implementation'}
-                  {result.tier === 'Getting Started' && 'Good foundation, ready to begin AI journey'}
-                  {result.tier === 'Not Ready Yet' && 'Focus on building foundational capabilities'}
-                </div>
-              </div>
-            </div>
-
-            {/* AI Report Display */}
-            {result.aiReport && (
-              <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-6 sm:p-8 rounded-2xl border border-gray-200 mb-6 sm:mb-8">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  AI-Generated Analysis & Recommendations
-                </h3>
-                <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
-                  <div className="prose prose-lg max-w-none">
-                    {result.aiReport ? (
-                      <div className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed text-sm">
-                        {result.aiReport.split('\n').map((line, index) => {
-                          // Handle markdown-style headers
-                          if (line.match(/^#{1,6}\s+/)) {
-                            const level = line.match(/^(#{1,6})\s+/)?.[1]?.length || 1;
-                            const text = line.replace(/^#{1,6}\s+/, '');
-                            return (
-                              <div key={index} className={`font-bold text-gray-900 mb-2 ${level === 1 ? 'text-2xl' : level === 2 ? 'text-xl' : 'text-lg'}`}>
-                                {text}
-                              </div>
-                            );
-                          }
-                          // Handle bold text
-                          if (line.includes('**')) {
-                            const parts = line.split(/(\*\*.*?\*\*)/g);
-                            return (
-                              <div key={index} className="mb-2">
-                                {parts.map((part, partIndex) => {
-                                  if (part.match(/\*\*.*?\*\*/)) {
-                                    return <strong key={partIndex}>{part.replace(/\*\*/g, '')}</strong>;
-                                  }
-                                  return part;
-                                })}
-                              </div>
-                            );
-                          }
-                          // Handle italic text
-                          if (line.includes('*') && !line.includes('**')) {
-                            const parts = line.split(/(\*.*?\*)/g);
-                            return (
-                              <div key={index} className="mb-2">
-                                {parts.map((part, partIndex) => {
-                                  if (part.match(/\*.*?\*/)) {
-                                    return <em key={partIndex}>{part.replace(/\*/g, '')}</em>;
-                                  }
-                                  return part;
-                                })}
-                              </div>
-                            );
-                          }
-                          // Regular line
-                          return <div key={index} className="mb-2">{line}</div>;
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-gray-500 italic">No AI report available</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* What's Next Section */}
-            <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-6 sm:p-8 rounded-2xl border border-gray-200">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">What's Next?</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-base sm:text-lg">Immediate Actions</h4>
-                  <ul className="space-y-2 sm:space-y-3 text-gray-700">
-                    <li className="flex items-center">
-                      <span className="text-green-500 mr-2 sm:mr-3">✅</span>
-                      Check your email for the detailed report
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-blue-500 mr-2 sm:mr-3">📊</span>
-                      Review your readiness breakdown by section
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-blue-500 mr-2 sm:mr-3">🛣️</span>
-                      Follow the 30-60-90 day roadmap
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-base sm:text-lg">Next Steps</h4>
-                  <ul className="space-y-2 sm:space-y-3 text-gray-700">
-                    <li className="flex items-center">
-                      <span className="text-blue-500 mr-2 sm:mr-3">🚀</span>
-                      Start with the quick wins identified
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-blue-500 mr-2 sm:mr-3">📈</span>
-                      Track progress with the suggested KPIs
-                    </li>
-                    <li className="flex items-center">
-                      <span className="text-blue-500 mr-2 sm:mr-3">💡</span>
-                      Share insights with your team
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="text-center space-y-4">
-            <button
-              onClick={() => {
-                setResult(null);
-                setError('');
-              }}
-              className="px-8 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 w-full sm:w-auto touch-friendly"
-            >
-              Take Another Assessment
-            </button>
-            <div className="text-sm text-gray-500">
-              Perfect for comparing different departments or tracking progress over time
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleCloseModal = () => {
+    setShowContactModal(false);
+    setResult(null);
+    setError('');
+    setAssessmentData(null);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100">
+    <div className="min-h-screen bg-black">
       {/* Hero Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto mobile-optimized py-16 sm:py-20 md:py-28">
@@ -343,9 +157,10 @@ export default function Home() {
       {showContactModal && assessmentData && (
         <ContactModal
           isOpen={showContactModal}
-          onClose={() => setShowContactModal(false)}
+          onClose={handleCloseModal}
           onSubmit={handleContactSubmit}
           isLoading={isLoading}
+          result={result}
         />
       )}
     </div>

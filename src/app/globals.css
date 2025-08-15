@@ -142,4 +142,43 @@ body {
   .enhanced-border {
     @apply border border-gray-200 hover:border-gray-300 transition-colors duration-200;
   }
+
+  /* Modal animations */
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4;
+  }
+
+  /* Modal content */
+  .modal-content {
+    @apply bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto;
+  }
+
+  /* Scrollbar styling for modal */
+  .modal-content::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .modal-content::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+
+  .modal-content::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400;
+  }
 }
