@@ -39,6 +39,8 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
     resolver: zodResolver(contactSchema),
   });
 
+
+
   if (!isOpen) return null;
 
   return (
@@ -143,14 +145,18 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Score Display */}
               <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                <div className="text-4xl font-bold text-blue-600 mb-2">{result.score || 'N/A'}</div>
+                <div className="text-4xl font-bold text-blue-600 mb-2">
+                  {typeof result.score === 'number' ? result.score : 'N/A'}
+                </div>
                 <div className="text-lg text-gray-700 mb-2">out of {result.maxScore || 29} points</div>
                 <div className="text-base text-gray-600">Total Score</div>
               </div>
               
               {/* Tier Display */}
               <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200">
-                <div className="text-2xl font-bold text-green-600 mb-2">{result.tier || 'N/A'}</div>
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  {result.tier || 'N/A'}
+                </div>
                 <div className="text-lg text-gray-700 mb-2">Readiness Tier</div>
                 <div className="text-base text-gray-600">Your Current Level</div>
               </div>
@@ -165,10 +171,15 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
                   </svg>
                   AI-Generated Analysis & Recommendations
                 </h4>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 max-h-40 overflow-y-auto">
-                  <div className="text-sm text-gray-700 leading-relaxed">
-                    {result.aiReport.substring(0, 300)}...
+                <div className="bg-white p-6 rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
+                  <div className="prose prose-sm max-w-none">
+                    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {result.aiReport}
+                    </div>
                   </div>
+                </div>
+                <div className="mt-3 text-xs text-gray-500 text-center">
+                  Full report has been sent to your email
                 </div>
               </div>
             )}

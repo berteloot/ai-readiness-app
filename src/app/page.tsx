@@ -49,13 +49,19 @@ export default function Home() {
         body: JSON.stringify({ ...assessmentData!, ...contactData }),
       });
 
-      const result = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Submission failed');
+        throw new Error(responseData.error || 'Submission failed');
       }
 
-      setResult(result);
+      // Extract the result from the API response
+      const { result, aiReport } = responseData;
+      
+      setResult({
+        ...result,
+        aiReport
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
