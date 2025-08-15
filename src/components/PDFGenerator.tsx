@@ -23,31 +23,36 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       // Check if breakdown has any content
       const hasBreakdown = Object.keys(breakdown).length > 0;
       
+      // Validate and sanitize data
+      const score = result.score || 0;
+      const tier = result.tier || 'Not Available';
+      const maxScore = result.maxScore || 29;
+      
       // Create a temporary div to render the content
       const element = document.createElement('div');
       element.innerHTML = `
-        <div style="padding: 20px; font-family: Arial, sans-serif; max-width: 800px;">
+        <div style="padding: 20px; font-family: Arial, sans-serif; max-width: 800px; line-height: 1.6;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin-bottom: 10px;">🤖 AI Readiness Report</h1>
-            <h2 style="color: #374151; margin-bottom: 5px;">${company}</h2>
-            <p style="color: #6b7280;">Generated on ${new Date().toLocaleDateString()}</p>
+            <h1 style="color: #2563eb; margin-bottom: 10px; font-size: 28px;">AI Readiness Assessment Report</h1>
+            <h2 style="color: #374151; margin-bottom: 5px; font-size: 20px;">${company || 'Your Company'}</h2>
+            <p style="color: #6b7280; font-size: 14px;">Generated on ${new Date().toLocaleDateString()}</p>
           </div>
           
           <div style="background: #f3f4f6; padding: 20px; border-radius: 10px; margin-bottom: 30px; text-align: center;">
             <div style="font-size: 48px; font-weight: bold; color: #2563eb; margin-bottom: 10px;">
-              ${result.score}
+              ${score}
             </div>
             <div style="font-size: 18px; color: #374151; margin-bottom: 10px;">
-              out of ${result.maxScore} points
+              out of ${maxScore} points
             </div>
             <div style="font-size: 24px; color: #059669; font-weight: bold;">
-              ${result.tier}
+              ${tier}
             </div>
           </div>
           
           ${hasBreakdown ? `
             <div style="background: white; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 30px;">
-              <h3 style="color: #374151; margin-bottom: 15px;">Score Breakdown</h3>
+              <h3 style="color: #374151; margin-bottom: 15px; font-size: 18px;">Score Breakdown by Section</h3>
               ${Object.entries(breakdown).map(([key, score]) => `
                 <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
                   <span style="color: #374151;">${getSectionName(key)}</span>
@@ -58,8 +63,8 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
           ` : ''}
           
           <div style="background: #f8fafc; padding: 20px; border-left: 4px solid #2563eb; margin-bottom: 30px;">
-            <h3 style="color: #374151; margin-bottom: 15px;">📋 AI-Generated Analysis & Recommendations</h3>
-            <div style="white-space: pre-wrap; font-family: monospace; font-size: 12px; line-height: 1.4; color: #374151;">
+            <h3 style="color: #374151; margin-bottom: 15px; font-size: 18px;">AI-Generated Analysis & Recommendations</h3>
+            <div style="white-space: pre-wrap; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #374151; max-width: 100%; word-wrap: break-word; overflow-wrap: break-word;">
               ${aiReport || 'No AI report available'}
             </div>
           </div>
@@ -73,37 +78,41 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       
       document.body.appendChild(element);
       
-      // Convert to canvas
+      // Convert to canvas with better quality settings
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 800,
+        height: element.scrollHeight,
+        scrollX: 0,
+        scrollY: 0
       });
       
       // Remove temporary element
       document.body.removeChild(element);
       
-      // Create PDF
+      // Create PDF with better page handling
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
+      const imgWidth = 190; // Slightly smaller than page width for margins
+      const pageHeight = 277; // A4 height minus margins
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
       
+      let heightLeft = imgHeight;
       let position = 0;
       
       // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - 20); // Account for margins
       
       // Add additional pages if needed
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, 'PNG', 10, position + 10, imgWidth, imgHeight);
+        heightLeft -= (pageHeight - 20);
       }
       
       // Download PDF

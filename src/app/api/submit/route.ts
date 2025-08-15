@@ -387,7 +387,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
     <body>
       <div class="container">
         <div class="header">
-          <h1>🤖 AI Readiness Assessment Report</h1>
+          <h1>AI Readiness Assessment Report</h1>
           <p>Your personalized analysis and roadmap for AI transformation</p>
         </div>
 
@@ -401,7 +401,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
           </div>
 
           <div class="breakdown">
-            <h3>📊 Score Breakdown by Section</h3>
+            <h3>Score Breakdown by Section</h3>
             ${Object.keys(result.breakdown).length > 0 ? 
               Object.entries(result.breakdown).map(([key, score]) => `
                 <div class="section">
@@ -414,7 +414,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
           </div>
 
           <div class="ai-report">
-            <h3>📋 AI-Generated Analysis & Recommendations</h3>
+            <h3>AI-Generated Analysis & Recommendations</h3>
             <div class="ai-content">
               ${aiReport}
             </div>
