@@ -30,6 +30,30 @@ interface ContactModalProps {
   } | null;
 }
 
+// Simple markdown to HTML converter
+function convertMarkdownToHTML(markdown: string): string {
+  return markdown
+    // Convert headers
+    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold text-gray-900 mt-4 mb-2">$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-gray-900 mt-6 mb-3">$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-gray-900 mt-8 mb-4">$1</h1>')
+    // Convert bold text
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+    // Convert italic text
+    .replace(/\*(.*?)\*/g, '<em class="text-gray-800">$1</em>')
+    // Convert line breaks
+    .replace(/\n\n/g, '</p><p class="mb-3">')
+    // Convert single line breaks
+    .replace(/\n/g, '<br>')
+    // Wrap in paragraphs
+    .replace(/^(.*)$/gm, '<p class="mb-3">$1</p>')
+    // Clean up empty paragraphs
+    .replace(/<p class="mb-3"><\/p>/g, '')
+    // Remove extra paragraph wrappers
+    .replace(/<p class="mb-3"><p class="mb-3">/g, '<p class="mb-3">')
+    .replace(/<\/p><\/p>/g, '</p>');
+}
+
 export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, result, assessmentData }: ContactModalProps) {
   const {
     register,
@@ -172,11 +196,12 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
                   AI-Generated Analysis & Recommendations
                 </h4>
                 <div className="bg-white p-6 rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
-                  <div className="prose prose-sm max-w-none">
-                    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {result.aiReport}
-                    </div>
-                  </div>
+                  <div 
+                    className="prose prose-sm max-w-none text-sm text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ 
+                      __html: convertMarkdownToHTML(result.aiReport) 
+                    }}
+                  />
                 </div>
                 <div className="mt-3 text-xs text-gray-500 text-center">
                   Full report has been sent to your email
