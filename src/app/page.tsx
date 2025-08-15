@@ -71,7 +71,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       {/* Hero Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto mobile-optimized py-16 sm:py-20 md:py-28">
@@ -138,7 +138,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t mt-16 sm:mt-20">
+      <div className="bg-gray-50 border-t mt-16 sm:mt-20">
         <div className="max-w-4xl mx-auto mobile-optimized py-8 sm:py-12">
           <div className="text-center">
             <div className="text-gray-500 mb-3 sm:mb-4">
