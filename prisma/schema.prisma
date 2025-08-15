@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  createdAt  DateTime @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  company      String
+  answers      Json
+  score        Int
+  tier         Tier
+  aiReport     String
+  painPoints   String[]
+  emailedAt    DateTime?
+  emailStatus  String?
+}
+
+enum Tier {
+  NOT_READY
+  GETTING_STARTED
+  AI_ENHANCED
+}
