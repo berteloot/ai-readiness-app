@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import AssessmentForm from '@/components/AssessmentForm';
+import PDFGenerator from '@/components/PDFGenerator';
 import { z } from 'zod';
 
 type FormData = z.infer<typeof import('@/components/AssessmentForm').default extends React.ComponentType<infer P> ? P : never>;
@@ -10,6 +11,10 @@ interface AssessmentResult {
   score: number;
   tier: string;
   message?: string;
+  aiReport?: string;
+  company?: string;
+  breakdown: Record<string, number>;
+  maxScore: number;
 }
 
 export default function Home() {
@@ -140,15 +145,22 @@ export default function Home() {
 
           {/* Action Buttons */}
           <div className="text-center space-y-4">
-            <button
-              onClick={() => {
-                setResult(null);
-                setError(null);
-              }}
-              className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              Take Another Assessment
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <PDFGenerator 
+                result={result} 
+                aiReport={result.aiReport || ''} 
+                company={result.company || 'Your Company'} 
+              />
+              <button
+                onClick={() => {
+                  setResult(null);
+                  setError(null);
+                }}
+                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Take Another Assessment
+              </button>
+            </div>
             <div className="text-sm text-gray-500">
               Perfect for comparing different departments or tracking progress over time
             </div>
