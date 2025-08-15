@@ -71,7 +71,12 @@ export default function Home() {
           {/* PDF Download Button - Top Right */}
           <div className="absolute top-0 right-0">
             <PDFGenerator 
-              result={result} 
+              result={{
+                score: result.score,
+                tier: result.tier,
+                breakdown: result.breakdown || {},
+                maxScore: result.maxScore || 29
+              }} 
               aiReport={result.aiReport || ''} 
               company={result.company || 'Your Company'} 
             />
@@ -128,12 +133,62 @@ export default function Home() {
             {/* AI Report Display */}
             {result.aiReport && (
               <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-8 rounded-2xl border border-gray-200 mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">📋 AI-Generated Analysis & Recommendations</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  AI-Generated Analysis & Recommendations
+                </h3>
                 <div className="bg-white p-6 rounded-xl border border-gray-200">
                   <div className="prose prose-lg max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed text-sm">
-                      {result.aiReport}
-                    </pre>
+                    {result.aiReport ? (
+                      <div className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed text-sm">
+                        {result.aiReport.split('\n').map((line, index) => {
+                          // Handle markdown-style headers
+                          if (line.match(/^#{1,6}\s+/)) {
+                            const level = line.match(/^(#{1,6})\s+/)?.[1]?.length || 1;
+                            const text = line.replace(/^#{1,6}\s+/, '');
+                            return (
+                              <div key={index} className={`font-bold text-gray-900 mb-2 ${level === 1 ? 'text-2xl' : level === 2 ? 'text-xl' : 'text-lg'}`}>
+                                {text}
+                              </div>
+                            );
+                          }
+                          // Handle bold text
+                          if (line.includes('**')) {
+                            const parts = line.split(/(\*\*.*?\*\*)/g);
+                            return (
+                              <div key={index} className="mb-2">
+                                {parts.map((part, partIndex) => {
+                                  if (part.match(/\*\*.*?\*\*/)) {
+                                    return <strong key={partIndex}>{part.replace(/\*\*/g, '')}</strong>;
+                                  }
+                                  return part;
+                                })}
+                              </div>
+                            );
+                          }
+                          // Handle italic text
+                          if (line.includes('*') && !line.includes('**')) {
+                            const parts = line.split(/(\*.*?\*)/g);
+                            return (
+                              <div key={index} className="mb-2">
+                                {parts.map((part, partIndex) => {
+                                  if (part.match(/\*.*?\*/)) {
+                                    return <em key={partIndex}>{part.replace(/\*/g, '')}</em>;
+                                  }
+                                  return part;
+                                })}
+                              </div>
+                            );
+                          }
+                          // Regular line
+                          return <div key={index} className="mb-2">{line}</div>;
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 italic">No AI report available</div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -104,6 +104,14 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
       case 'multi':
         return (
           <div className="space-y-4">
+            <div className="question-type-multi mb-4 p-3 rounded-lg">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span className="font-medium">Multiple Choice - Select all that apply</span>
+              </div>
+            </div>
             {question.options.map((option) => {
               const isSelected = Array.isArray(currentValue) && currentValue.includes(option.value);
               const isDisabled = Boolean(question.maxSelections && 
@@ -123,8 +131,8 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                     onChange={() => handleMultiSelect(question.id as keyof FormData, option.value, question.maxSelections)}
                     disabled={isDisabled}
                   />
-                  <div className="flex items-start space-x-4">
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  <div className="option-content">
+                    <div className={`option-checkbox ${
                       isSelected ? 'border-accent-500 bg-accent-500' : 'border-gray-300'
                     }`}>
                       {isSelected && (
@@ -133,9 +141,9 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                         </svg>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-900 text-lg mb-2">{option.label}</div>
-                      <div className="text-gray-600 text-base leading-relaxed">{option.description}</div>
+                    <div className="option-text">
+                      <div className="option-label">{option.label}</div>
+                      <div className="option-description">{option.description}</div>
                       {question.maxSelections && (
                         <div className="text-sm text-accent-600 font-medium mt-3">
                           {Array.isArray(currentValue) ? currentValue.length : 0} of {question.maxSelections} selected
@@ -152,6 +160,14 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
       case 'single':
         return (
           <div className="space-y-4">
+            <div className="question-type-single mb-4 p-3 rounded-lg">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-medium">Single Choice - Select one option</span>
+              </div>
+            </div>
             {question.options.map((option) => {
               const isSelected = currentValue === option.value;
               
@@ -167,17 +183,17 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                     checked={isSelected}
                     onChange={() => handleSingleSelect(question.id as keyof FormData, option.value)}
                   />
-                  <div className="flex items-start space-x-4">
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  <div className="option-content">
+                    <div className={`option-radio ${
                       isSelected ? 'border-accent-500 bg-accent-500' : 'border-gray-300'
                     }`}>
                       {isSelected && (
                         <div className="w-3 h-3 bg-white rounded-full"></div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-900 text-lg mb-2">{option.label}</div>
-                      <div className="text-gray-600 text-base leading-relaxed">{option.description}</div>
+                    <div className="option-text">
+                      <div className="option-label">{option.label}</div>
+                      <div className="option-description">{option.description}</div>
                     </div>
                   </div>
                 </label>
@@ -213,14 +229,14 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Progress Bar */}
             {showProgress && (
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-2">
+              <div className="progress-container">
+                <div className="progress-info">
                   <span className="text-sm font-medium text-gray-600">Question {currentQuestion + 1} of {questions.length}</span>
                   <span className="text-sm font-medium text-accent-600">{Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="progress-bar">
                   <div 
-                    className="accent-gradient h-2 rounded-full transition-all duration-300 ease-out"
+                    className="progress-fill"
                     style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
                   ></div>
                 </div>

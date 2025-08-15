@@ -17,6 +17,12 @@ interface PDFGeneratorProps {
 export default function PDFGenerator({ result, aiReport, company }: PDFGeneratorProps) {
   const generatePDF = async () => {
     try {
+      // Ensure breakdown exists and is valid
+      const breakdown = result.breakdown || {};
+      
+      // Check if breakdown has any content
+      const hasBreakdown = Object.keys(breakdown).length > 0;
+      
       // Create a temporary div to render the content
       const element = document.createElement('div');
       element.innerHTML = `
@@ -39,20 +45,22 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             </div>
           </div>
           
-          <div style="background: white; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 30px;">
-            <h3 style="color: #374151; margin-bottom: 15px;">Score Breakdown</h3>
-            ${Object.entries(result.breakdown).map(([key, score]) => `
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
-                <span style="color: #374151;">${getSectionName(key)}</span>
-                <span style="font-weight: bold; color: #2563eb;">${score}/${getMaxScore(key)}</span>
-              </div>
-            `).join('')}
-          </div>
+          ${hasBreakdown ? `
+            <div style="background: white; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 30px;">
+              <h3 style="color: #374151; margin-bottom: 15px;">Score Breakdown</h3>
+              ${Object.entries(breakdown).map(([key, score]) => `
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
+                  <span style="color: #374151;">${getSectionName(key)}</span>
+                  <span style="font-weight: bold; color: #2563eb;">${score}/${getMaxScore(key)}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
           
           <div style="background: #f8fafc; padding: 20px; border-left: 4px solid #2563eb; margin-bottom: 30px;">
             <h3 style="color: #374151; margin-bottom: 15px;">📋 AI-Generated Analysis & Recommendations</h3>
             <div style="white-space: pre-wrap; font-family: monospace; font-size: 12px; line-height: 1.4; color: #374151;">
-              ${aiReport}
+              ${aiReport || 'No AI report available'}
             </div>
           </div>
           

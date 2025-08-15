@@ -230,58 +230,202 @@ function extractPainPoints(answers: Answers): string[] {
 function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answers, company: string): string {
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Lean Solutions Group AI Readiness Report</title>
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 30px; }
-        .score-card { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center; }
-        .score { font-size: 48px; font-weight: bold; color: #007bff; }
-        .tier { font-size: 24px; color: #28a745; margin: 10px 0; }
-        .breakdown { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .section { display: flex; justify-content: space-between; margin: 10px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
-        .ai-report { background: #f8f9fa; border-left: 4px solid #007bff; padding: 20px; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 30px; padding: 20px; color: #6c757d; font-size: 14px; }
-        .company-name { font-size: 18px; font-weight: bold; color: #495057; margin-bottom: 10px; }
+        body { 
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+          line-height: 1.6; 
+          color: #333; 
+          max-width: 600px; 
+          margin: 0 auto; 
+          padding: 20px; 
+          background-color: #f8f9fa;
+        }
+        .container {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+        .header { 
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+          color: white; 
+          padding: 40px 30px; 
+          text-align: center; 
+        }
+        .header h1 {
+          margin: 0 0 10px 0;
+          font-size: 28px;
+          font-weight: 700;
+        }
+        .header p {
+          margin: 0;
+          font-size: 16px;
+          opacity: 0.9;
+        }
+        .content {
+          padding: 30px;
+        }
+        .company-name { 
+          font-size: 20px; 
+          font-weight: 600; 
+          color: #495057; 
+          margin-bottom: 20px;
+          text-align: center;
+          padding: 15px;
+          background: #f8f9fa;
+          border-radius: 8px;
+        }
+        .score-card { 
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          border: 2px solid #dee2e6; 
+          border-radius: 12px; 
+          padding: 30px; 
+          margin: 25px 0; 
+          text-align: center; 
+        }
+        .score { 
+          font-size: 56px; 
+          font-weight: 800; 
+          color: #007bff; 
+          margin-bottom: 10px;
+          line-height: 1;
+        }
+        .score-subtitle {
+          font-size: 18px;
+          color: #6c757d;
+          margin-bottom: 15px;
+        }
+        .tier { 
+          font-size: 28px; 
+          color: #28a745; 
+          font-weight: 700;
+          margin: 0;
+        }
+        .breakdown { 
+          background: white; 
+          border: 1px solid #dee2e6; 
+          border-radius: 12px; 
+          padding: 25px; 
+          margin: 25px 0; 
+        }
+        .breakdown h3 {
+          margin: 0 0 20px 0;
+          color: #495057;
+          font-size: 20px;
+          font-weight: 600;
+        }
+        .section { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center;
+          margin: 12px 0; 
+          padding: 12px 0; 
+          border-bottom: 1px solid #e9ecef; 
+        }
+        .section:last-child {
+          border-bottom: none;
+        }
+        .section-name {
+          font-weight: 500;
+          color: #495057;
+        }
+        .section-score {
+          font-weight: 700;
+          color: #007bff;
+          font-size: 16px;
+        }
+        .ai-report { 
+          background: #f8f9fa; 
+          border-left: 4px solid #007bff; 
+          padding: 25px; 
+          margin: 25px 0; 
+          border-radius: 0 8px 8px 0;
+        }
+        .ai-report h3 {
+          margin: 0 0 20px 0;
+          color: #495057;
+          font-size: 20px;
+          font-weight: 600;
+        }
+        .ai-content {
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid #e9ecef;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-size: 14px;
+          line-height: 1.6;
+          color: #495057;
+          white-space: pre-wrap;
+        }
+        .footer { 
+          text-align: center; 
+          margin-top: 30px; 
+          padding: 25px; 
+          color: #6c757d; 
+          font-size: 14px;
+          background: #f8f9fa;
+          border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+          margin: 8px 0;
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 30px 20px; }
+          .content { padding: 20px; }
+          .score { font-size: 48px; }
+          .tier { font-size: 24px; }
+        }
       </style>
     </head>
     <body>
-      <div class="header">
-        <h1>🤖 Lean Solutions Group AI Readiness Report</h1>
-        <p>Your personalized analysis and roadmap for AI transformation</p>
-      </div>
-
-      <div class="company-name">Company: ${company}</div>
-
-      <div class="score-card">
-        <div class="score">${result.score}</div>
-        <div>out of ${result.maxScore} points</div>
-        <div class="tier">${result.tier}</div>
-      </div>
-
-      <div class="breakdown">
-        <h3>Score Breakdown</h3>
-        ${Object.entries(result.breakdown).map(([key, score]) => `
-          <div class="section">
-            <span>${getSectionName(key)}</span>
-            <span><strong>${score}/${getMaxScore(key)}</strong></span>
-          </div>
-        `).join('')}
-      </div>
-
-      <div class="ai-report">
-        <h3>📋 AI-Generated Analysis & Recommendations</h3>
-        <div style="white-space: pre-wrap; font-family: monospace; font-size: 14px; line-height: 1.5;">
-          ${aiReport}
+      <div class="container">
+        <div class="header">
+          <h1>🤖 AI Readiness Assessment Report</h1>
+          <p>Your personalized analysis and roadmap for AI transformation</p>
         </div>
-      </div>
 
-      <div class="footer">
-        <p>This report was generated on ${new Date().toLocaleDateString()}</p>
-        <p>For questions or support, please contact Lean Solutions Group</p>
+        <div class="content">
+          <div class="company-name">Company: ${company}</div>
+
+          <div class="score-card">
+            <div class="score">${result.score}</div>
+            <div class="score-subtitle">out of ${result.maxScore} points</div>
+            <div class="tier">${result.tier}</div>
+          </div>
+
+          <div class="breakdown">
+            <h3>📊 Score Breakdown by Section</h3>
+            ${Object.keys(result.breakdown).length > 0 ? 
+              Object.entries(result.breakdown).map(([key, score]) => `
+                <div class="section">
+                  <span class="section-name">${getSectionName(key)}</span>
+                  <span class="section-score">${score}/${getMaxScore(key)}</span>
+                </div>
+              `).join('') : 
+              '<div class="section"><span class="section-name">No breakdown data available</span></div>'
+            }
+          </div>
+
+          <div class="ai-report">
+            <h3>📋 AI-Generated Analysis & Recommendations</h3>
+            <div class="ai-content">
+              ${aiReport}
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p><strong>Report generated on ${new Date().toLocaleDateString()}</strong></p>
+          <p>For questions or support, please contact Lean Solutions Group</p>
+          <p>This assessment was powered by advanced AI analysis</p>
+        </div>
       </div>
     </body>
     </html>
@@ -290,22 +434,34 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
 
 function generateEmailText(result: ScoreResult, aiReport: string, answers: Answers, company: string): string {
   return `
-LEAN SOLUTIONS GROUP AI READINESS REPORT
+LEAN SOLUTIONS GROUP - AI READINESS ASSESSMENT REPORT
+====================================================
 
 Company: ${company}
-Your Score: ${result.score} out of ${result.maxScore} points
-Your Tier: ${result.tier}
+Assessment Date: ${new Date().toLocaleDateString()}
 
-SCORE BREAKDOWN:
-${Object.entries(result.breakdown).map(([key, score]) => `- ${getSectionName(key)}: ${score}/${getMaxScore(key)} points`).join('\n')}
+YOUR RESULTS
+-----------
+Total Score: ${result.score} out of ${result.maxScore} points
+Readiness Tier: ${result.tier}
 
-AI-GENERATED ANALYSIS & RECOMMENDATIONS:
+SCORE BREAKDOWN BY SECTION
+-------------------------
+${Object.keys(result.breakdown).length > 0 ? 
+  Object.entries(result.breakdown).map(([key, score]) => `• ${getSectionName(key)}: ${score}/${getMaxScore(key)} points`).join('\n') : 
+  '• No breakdown data available'
+}
+
+AI-GENERATED ANALYSIS & RECOMMENDATIONS
+======================================
 ${aiReport}
 
 ---
-Report generated on ${new Date().toLocaleDateString()}
-For questions or support, please contact Lean Solutions Group
-  `;
+This report was generated by Lean Solutions Group's AI-powered assessment tool.
+For questions or support, please contact us.
+
+Powered by advanced AI analysis and industry expertise.
+  `.trim();
 }
 
 function getSectionName(key: string): string {
