@@ -18,16 +18,19 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
   const generatePDF = async () => {
     const { score, tier, breakdown, maxScore } = result;
 
-    // 1) Build a real DOM node so jsPDF can paginate using CSS page-breaks
+    // Build a visible (but hidden via opacity) container at (0,0)
+    // Putting it off-screen can produce blank canvases in html2canvas/jsPDF.
     const container = document.createElement('div');
     container.style.position = 'fixed';
-    container.style.left = '-10000px';
+    container.style.left = '0';
     container.style.top = '0';
-    container.style.width = '794px'; // A4 width at 96 DPI (approx)
+    container.style.width = '794px'; // ~A4 @ 96dpi
     container.style.padding = '24px';
     container.style.background = '#ffffff';
     container.style.fontFamily = 'Helvetica, Arial, sans-serif';
     container.style.color = '#111827';
+    container.style.zIndex = '-1';
+    container.style.opacity = '0'; // keep it in layout flow for rendering
     
     // Helper functions for template string
     const escapeHTML = (s: string): string => {
@@ -102,39 +105,40 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
 
     document.body.appendChild(container);
 
-    // 2) Use jsPDF.html for native pagination + CSS page-break rules
-    //    Keep unit in "pt" and format "a4" for reliable sizing.
     const doc = new jsPDF({
       unit: 'pt',
       format: 'a4',
       compress: true, // enable stream compression
     });
 
+    // Key fixes for blank pages:
+    // - Set windowWidth to container.scrollWidth
+    // - Increase scale a bit for reliability (1.5)
+    // - Use pagebreak: { mode: 'css' } only
     await doc.html(container, {
-      // Fit our 794px content width to PDF printable width (~ 595pt - margins)
-      // Let jsPDF compute scale automatically by setting html2canvas width/height via windowWidth.
+      x: 36,
+      y: 36,
+      width: 523, // a4 printable width ~ 595 - margins
+      windowWidth: container.scrollWidth || 794,
       html2canvas: {
-        scale: 1.2, // balanced quality vs size (lower than default 2)
+        scale: 1.5,
+        backgroundColor: '#ffffff',
         useCORS: true,
         allowTaint: false,
-        backgroundColor: '#ffffff',
         logging: false,
       },
-      margin: [36, 36, 40, 36], // 0.5in margins
-      autoPaging: 'text', // try to avoid cutting text
-      // pagebreak: { mode: ['css', 'legacy'] }, // honor our CSS page-breaks
-      callback: (d) => {
-        d.setProperties({
-          title: `AI-Readiness-Report-${company || 'Your Company'}`,
-          subject: 'AI Readiness Assessment',
-          author: 'Lean Solutions Group',
-        });
-        d.save(`AI-Readiness-Report-${(company || 'Your Company').replace(/\s+/g, '-')}.pdf`);
-      },
-      windowWidth: 794, // match container width
+      // pagebreak: { mode: ['css'] },
     });
 
-    // 3) Cleanup
+    doc.setProperties({
+      title: `AI-Readiness-Report-${company || 'Your Company'}`,
+      subject: 'AI Readiness Assessment',
+      author: 'Lean Solutions Group',
+    });
+
+    doc.save(`AI-Readiness-Report-${(company || 'Your Company').replace(/\s+/g, '-')}.pdf`);
+
+    // Cleanup
     document.body.removeChild(container);
   };
 

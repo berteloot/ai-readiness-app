@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+// Global variable to store Prisma instance
 let prisma: PrismaClient;
 
 if (process.env.NODE_ENV === 'production') {
   prisma = new PrismaClient();
 } else {
+  // In development, use a global variable to prevent multiple instances
   if (!(global as any).prisma) {
     (global as any).prisma = new PrismaClient();
   }
@@ -14,46 +16,70 @@ if (process.env.NODE_ENV === 'production') {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Database test endpoint called');
+    
     // Check environment variables
     const envCheck = {
       NODE_ENV: process.env.NODE_ENV,
       DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
       ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'Set' : 'Not set',
     };
-
-    // Test database connection
-    await prisma.$connect();
     
-    // Check if tables exist by trying to count records
+    console.log('Environment check:', envCheck);
+    
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({
+        status: 'error',
+        message: 'DATABASE_URL not set',
+        env: envCheck
+      }, { status: 500 });
+    }
+    
+    // Test database connection
+    console.log('Testing database connection...');
+    await prisma.$connect();
+    console.log('Database connection successful');
+    
+    // Test if tables exist by running a simple query
+    console.log('Testing table access...');
     const userCount = await prisma.user.count();
     const submissionCount = await prisma.submission.count();
     
-    // Test a simple query
-    const testQuery = await prisma.$queryRaw`SELECT 1 as test`;
+    console.log(`Tables accessible - Users: ${userCount}, Submissions: ${submissionCount}`);
     
     return NextResponse.json({
       status: 'success',
-      environment: envCheck,
-      database: {
-        connected: true,
-        userCount,
-        submissionCount,
-        testQuery
-      }
+      message: 'Database connection and tables working',
+      env: envCheck,
+      tables: {
+        users: userCount,
+        submissions: submissionCount
+      },
+      timestamp: new Date().toISOString()
     });
+    
   } catch (error) {
-    console.error('Database test error:', error);
+    console.error('Database test failed:', error);
+    
+    let errorDetails = 'Unknown error';
+    let errorCode = null;
+    
+    if (error instanceof Error) {
+      errorDetails = error.message;
+    }
+    
+    if (error && typeof error === 'object' && 'code' in error) {
+      errorCode = (error as any).code;
+    }
     
     return NextResponse.json({
       status: 'error',
-      environment: {
-        NODE_ENV: process.env.NODE_ENV,
-        DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
-        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'Set' : 'Not set',
-      },
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      message: 'Database test failed',
+      error: errorDetails,
+      code: errorCode,
+      timestamp: new Date().toISOString()
     }, { status: 500 });
+    
   } finally {
     try {
       await prisma.$disconnect();

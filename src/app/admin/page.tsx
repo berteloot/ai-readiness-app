@@ -23,6 +23,8 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
+  const [isSettingUpDb, setIsSettingUpDb] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -64,16 +66,23 @@ export default function AdminPage() {
   };
 
   const fetchSubmissions = async () => {
+    setIsLoadingSubmissions(true);
+    setError('');
     try {
       const response = await fetch('/api/admin/submissions');
       if (response.ok) {
         const data = await response.json();
         setSubmissions(data.submissions);
       } else {
-        setError('Failed to fetch submissions');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+        setError(`Failed to fetch submissions: ${errorData.error || 'Unknown error'}`);
       }
     } catch (err) {
-      setError('Failed to fetch submissions');
+      console.error('Network Error:', err);
+      setError('Failed to fetch submissions: Network error');
+    } finally {
+      setIsLoadingSubmissions(false);
     }
   };
 
@@ -81,6 +90,36 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('adminAuthenticated');
     setSubmissions([]);
+  };
+
+  const setupDatabase = async () => {
+    setIsSettingUpDb(true);
+    setError('');
+    
+    try {
+      const response = await fetch('/api/admin/setup-db', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Database setup successful:', data);
+        // Refresh submissions after setup
+        fetchSubmissions();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(`Database setup failed: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Database setup error:', err);
+      setError('Database setup failed: Network error');
+    } finally {
+      setIsSettingUpDb(false);
+    }
   };
 
   const downloadCSV = () => {
@@ -144,6 +183,7 @@ export default function AdminPage() {
                 name="password"
                 type="password"
                 required
+                autoComplete="new-password"
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
@@ -178,6 +218,20 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <div className="flex space-x-3">
               <button
+                onClick={setupDatabase}
+                disabled={isSettingUpDb}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {isSettingUpDb ? 'Setting up...' : 'Setup Database'}
+              </button>
+              <button
+                onClick={fetchSubmissions}
+                disabled={isLoadingSubmissions}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {isLoadingSubmissions ? 'Refreshing...' : 'Refresh'}
+              </button>
+              <button
                 onClick={downloadCSV}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
@@ -202,7 +256,22 @@ export default function AdminPage() {
               </p>
             </div>
             
-            {submissions.length === 0 ? (
+            {isLoadingSubmissions ? (
+              <div className="px-4 py-8 text-center text-gray-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                Loading submissions...
+              </div>
+            ) : error ? (
+              <div className="px-4 py-8 text-center">
+                <div className="text-red-600 mb-4">{error}</div>
+                <button
+                  onClick={fetchSubmissions}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : submissions.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">
                 No submissions found
               </div>
