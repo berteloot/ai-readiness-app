@@ -176,11 +176,6 @@ export default function Home() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               AI Readiness Assessment
             </h1>
@@ -192,17 +187,10 @@ export default function Home() {
             {/* Key Benefits */}
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="text-center p-4">
-                <div className="text-3xl mb-2">🎯</div>
                 <h3 className="font-semibold text-gray-900 mb-2">Comprehensive Evaluation</h3>
                 <p className="text-gray-600 text-sm">9 key areas covering technology, data, workforce, and strategy</p>
               </div>
               <div className="text-center p-4">
-                <div className="text-3xl mb-2">🤖</div>
-                <h3 className="font-semibold text-gray-900 mb-2">AI-Generated Insights</h3>
-                <p className="text-gray-600 text-sm">Personalized recommendations and actionable roadmap</p>
-              </div>
-              <div className="text-center p-4">
-                <div className="text-3xl mb-2">📧</div>
                 <h3 className="font-semibold text-gray-900 mb-2">Instant Delivery</h3>
                 <p className="text-gray-600 text-sm">Detailed report sent directly to your email</p>
               </div>
@@ -240,7 +228,7 @@ export default function Home() {
           <div className="text-center">
             <div className="text-gray-500 mb-4">
               <p className="text-lg">AI Readiness Assessment Tool</p>
-              <p className="text-sm">Powered by Next.js, OpenAI, and modern web technologies</p>
+              <p className="text-sm">Powered by Lean Solutions Group and Nytro Marketing</p>
             </div>
             <div className="flex justify-center space-x-6 text-sm text-gray-400">
               <span>Privacy Policy</span>
