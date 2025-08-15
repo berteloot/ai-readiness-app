@@ -6,9 +6,15 @@ import { z } from 'zod';
 
 type FormData = z.infer<typeof import('@/components/AssessmentForm').default extends React.ComponentType<infer P> ? P : never>;
 
+interface AssessmentResult {
+  score: number;
+  tier: string;
+  message?: string;
+}
+
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<AssessmentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (data: FormData) => {
@@ -90,9 +96,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* What's Next Section */}
+            {/* What&apos;s Next Section */}
             <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-8 rounded-2xl border border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">What's Next?</h3>
+                              <h3 className="text-2xl font-bold text-gray-900 mb-6">What&apos;s Next?</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3 text-lg">Immediate Actions</h4>
@@ -167,7 +173,7 @@ export default function Home() {
               AI Readiness Assessment
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-8">
-              Evaluate your organization's readiness for AI transformation with our comprehensive assessment. 
+              Evaluate your organization&apos;s readiness for AI transformation with our comprehensive assessment. 
               Get a personalized report with actionable insights and a roadmap for success.
             </p>
             

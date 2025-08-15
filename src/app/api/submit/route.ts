@@ -7,6 +7,28 @@ const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
+    // Check for required environment variables
+    const requiredEnvVars = {
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+      SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL,
+    };
+
+    const missingVars = Object.entries(requiredEnvVars)
+      .filter(([, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingVars.length > 0) {
+      console.error('Missing required environment variables:', missingVars);
+      return NextResponse.json(
+        { 
+          error: 'Server configuration incomplete. Please contact support.',
+          details: `Missing: ${missingVars.join(', ')}`
+        },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     const { email, company, consent, ...answers } = body;
 

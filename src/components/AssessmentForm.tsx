@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { questions } from '@/data/questions';
-import { Answers } from '@/lib/scoring';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -30,7 +29,6 @@ interface AssessmentFormProps {
 
 export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Partial<FormData>>({});
   const [showProgress, setShowProgress] = useState(false);
 
   const {
@@ -75,12 +73,10 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
     }
     
     setValue(questionId, newValues);
-    setAnswers(prev => ({ ...prev, [questionId]: newValues }));
   };
 
   const handleSingleSelect = (questionId: keyof FormData, value: string) => {
     setValue(questionId, value);
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
   const nextQuestion = async () => {
