@@ -1,0 +1,7 @@
+DATABASE_URL="postgresql://username:password@localhost:5432/ai_readiness_db"
+OPENAI_API_KEY="your-openai-api-key"
+RESEND_API_KEY="your-resend-api-key"
+OPENAI_MODEL=gpt-4o-mini
+REPORT_FROM_EMAIL=reports@yourdomain.com
+REPORT_FROM_NAME=AI Readiness Reports
+SITE_URL=http://localhost:3000

@@ -36,11 +36,11 @@ body {
   }
   
   .question-card {
-    @apply bg-white rounded-2xl shadow-lg border border-gray-100 p-8 md:p-12 max-w-4xl mx-auto;
+    @apply bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 md:p-8 lg:p-12 max-w-4xl mx-auto;
   }
   
   .option-card {
-    @apply p-6 rounded-xl border-2 border-gray-200 hover:border-accent-500 hover:shadow-md transition-all duration-200 cursor-pointer;
+    @apply p-4 sm:p-5 md:p-6 rounded-xl border-2 border-gray-200 hover:border-accent-500 hover:shadow-md transition-all duration-200 cursor-pointer;
   }
   
   .option-card.selected {
@@ -48,54 +48,54 @@ body {
   }
   
   .btn-primary {
-    @apply px-8 py-4 bg-accent-500 text-white rounded-xl hover:bg-accent-600 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1;
+    @apply px-6 sm:px-8 py-3 sm:py-4 bg-accent-500 text-white rounded-xl hover:bg-accent-600 transition-all duration-200 font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1;
   }
   
   .btn-secondary {
-    @apply px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium;
+    @apply px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium;
   }
 
   /* Question type indicators */
   .question-type-multi {
-    @apply bg-blue-50 border border-blue-200 text-blue-700;
+    @apply bg-blue-50 border border-blue-200 text-blue-700 p-3 sm:p-4 rounded-lg;
   }
   
   .question-type-single {
-    @apply bg-green-50 border border-green-200 text-green-700;
+    @apply bg-green-50 border border-green-200 text-green-700 p-3 sm:p-4 rounded-lg;
   }
   
   /* Better option alignment */
   .option-content {
-    @apply flex items-start space-x-4;
+    @apply flex items-start space-x-3 sm:space-x-4;
   }
   
   .option-checkbox {
-    @apply flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center;
+    @apply flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded border-2 flex items-center justify-center;
   }
   
   .option-radio {
-    @apply flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center;
+    @apply flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center;
   }
   
   .option-text {
-    @apply flex-1;
+    @apply flex-1 min-w-0;
   }
   
   .option-label {
-    @apply font-semibold text-gray-900 text-lg mb-2;
+    @apply font-semibold text-gray-900 text-base sm:text-lg mb-1 sm:mb-2 leading-tight;
   }
   
   .option-description {
-    @apply text-gray-600 text-base leading-relaxed;
+    @apply text-gray-600 text-sm sm:text-base leading-relaxed;
   }
   
   /* Progress bar improvements */
   .progress-container {
-    @apply mb-8;
+    @apply mb-6 sm:mb-8;
   }
   
   .progress-info {
-    @apply flex justify-between items-center mb-2;
+    @apply flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2 sm:gap-0;
   }
   
   .progress-bar {
@@ -104,5 +104,42 @@ body {
   
   .progress-fill {
     @apply accent-gradient h-2 rounded-full transition-all duration-300 ease-out;
+  }
+
+  /* Responsive typography */
+  .question-title {
+    @apply text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight;
+  }
+  
+  .question-subtitle {
+    @apply text-lg sm:text-xl text-gray-600 leading-relaxed;
+  }
+
+  /* Mobile-first responsive improvements */
+  .mobile-optimized {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+
+  /* Enhanced spacing for mobile */
+  .mobile-spacing {
+    @apply space-y-4 sm:space-y-6;
+  }
+
+  /* Better touch targets for mobile */
+  .touch-friendly {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Improved shadows and borders */
+  .enhanced-shadow {
+    @apply shadow-lg hover:shadow-xl transition-shadow duration-200;
+  }
+
+  .enhanced-border {
+    @apply border border-gray-200 hover:border-gray-300 transition-colors duration-200;
   }
 }
