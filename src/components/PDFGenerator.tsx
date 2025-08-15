@@ -18,21 +18,20 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
   const generatePDF = async () => {
     const { score, tier, breakdown, maxScore } = result;
 
-    // Build a visible (but hidden via opacity) container at (0,0)
-    // Putting it off-screen can produce blank canvases in html2canvas/jsPDF.
+    // Create a temporary container for PDF generation
     const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '0';
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
     container.style.top = '0';
-    container.style.width = '794px'; // ~A4 @ 96dpi
-    container.style.padding = '24px';
+    container.style.width = '595px'; // A4 width in points
+    container.style.padding = '20px';
     container.style.background = '#ffffff';
-    container.style.fontFamily = 'Helvetica, Arial, sans-serif';
-    container.style.color = '#111827';
-    container.style.zIndex = '-1';
-    container.style.opacity = '0'; // keep it in layout flow for rendering
+    container.style.fontFamily = 'Arial, sans-serif';
+    container.style.color = '#000000';
+    container.style.fontSize = '12px';
+    container.style.lineHeight = '1.4';
     
-    // Helper functions for template string
+    // Helper functions
     const escapeHTML = (s: string): string => {
       return s
         .replace(/&/g, '&amp;')
@@ -43,103 +42,104 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
     };
 
     const splitIntoParagraphs = (s: string): string[] => {
-      // Split on double newlines or markdown-style headings to keep paragraphs compact.
       return s
         .split(/\n\s*\n|(?=^#{1,6}\s)/gm)
         .map((t) => t.trim())
         .filter(Boolean);
     };
 
+    // Build the HTML content without CSS page breaks
     container.innerHTML = `
-      <style>
-        .h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px 0; font-weight: 700; }
-        .h2 { font-size: 20px; line-height: 1.3; margin: 0 0 6px 0; font-weight: 600; }
-        .muted { color: #6b7280; font-size: 12px; }
-        .card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
-        .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .section { margin: 18px 0 0 0; }
-        .avoid-break { page-break-inside: avoid; break-inside: avoid; }
-        .page-break { page-break-before: always; break-before: page; }
-        .break-after { page-break-after: always; break-after: page; }
-        .kv { display:flex; justify-content:space-between; font-size:12px; padding:6px 8px; border-bottom:1px solid #e5e7eb; }
-        .kv:last-child { border-bottom: 0; }
-        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-        /* Make paragraphs compact to reduce page count, keep readable line-height */
-        p { font-size: 12px; line-height: 1.45; margin: 0 0 8px 0; }
-        ul { margin: 8px 0; padding-left: 18px; }
-        li { margin: 4px 0; }
-      </style>
-
-      <div class="section avoid-break">
-        <div class="h1">AI Readiness Assessment Report</div>
-        <div class="h2">${company || 'Your Company'}</div>
-        <div class="muted">Generated on ${new Date().toLocaleDateString()}</div>
+      <div style="margin-bottom: 20px;">
+        <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 10px 0; color: #1f2937;">
+          AI Readiness Assessment Report
+        </h1>
+        <h2 style="font-size: 18px; font-weight: 600; margin: 0 0 5px 0; color: #374151;">
+          ${company || 'Your Company'}
+        </h2>
+        <p style="font-size: 12px; color: #6b7280; margin: 0;">
+          Generated on ${new Date().toLocaleDateString()}
+        </p>
       </div>
 
-      <div class="section card avoid-break">
-        <div class="h2" style="margin-bottom: 8px;">Overall Score</div>
-        <div style="display:flex; align-items:baseline; gap:8px;">
-          <div style="font-size:40px; font-weight:700; color:#2563eb;">${score}</div>
-          <div style="font-size:14px; color:#374151;">out of ${maxScore} points</div>
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 10px 0; color: #1f2937;">
+          Overall Score
+        </h3>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;">
+          <span style="font-size: 32px; font-weight: bold; color: #2563eb;">${score}</span>
+          <span style="font-size: 14px; color: #374151;">out of ${maxScore} points</span>
         </div>
-        <div style="font-size:18px; color:#059669; font-weight:700; margin-top:6px;">${tier}</div>
+        <div style="font-size: 16px; color: #059669; font-weight: 600;">${tier}</div>
       </div>
 
-      <div class="section card avoid-break">
-        <div class="h2">Score Breakdown by Section</div>
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 10px 0; color: #1f2937;">
+          Score Breakdown by Section
+        </h3>
         ${Object.entries(breakdown)
           .map(
             ([k, v]) =>
-              `<div class="kv"><span>${getSectionName(k)}</span><span class="mono">${v}/${getMaxScore(k)}</span></div>`
+              `<div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e5e7eb; font-size: 12px;">
+                <span>${getSectionName(k)}</span>
+                <span style="font-family: monospace; font-weight: 600;">${v}/${getMaxScore(k)}</span>
+              </div>`
           )
           .join('')}
       </div>
 
-      <div class="section page-break">
-        <div class="h2" id="exec-summary">Executive Summary</div>
+      <div style="margin-top: 30px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937;">
+          Executive Summary
+        </h3>
         ${splitIntoParagraphs(aiReport)
-          .map((para) => `<p class="avoid-break">${escapeHTML(para)}</p>`)
+          .map((para) => `<p style="margin: 0 0 12px 0; text-align: justify;">${escapeHTML(para)}</p>`)
           .join('')}
       </div>
     `;
 
     document.body.appendChild(container);
 
-    const doc = new jsPDF({
-      unit: 'pt',
-      format: 'a4',
-      compress: true, // enable stream compression
-    });
+    try {
+      const doc = new jsPDF({
+        unit: 'pt',
+        format: 'a4',
+        compress: true,
+      });
 
-    // Key fixes for blank pages:
-    // - Set windowWidth to container.scrollWidth
-    // - Increase scale a bit for reliability (1.5)
-    // - Use pagebreak: { mode: 'css' } only
-    await doc.html(container, {
-      x: 36,
-      y: 36,
-      width: 523, // a4 printable width ~ 595 - margins
-      windowWidth: container.scrollWidth || 794,
-      html2canvas: {
-        scale: 1.5,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-      },
-      // pagebreak: { mode: ['css'] },
-    });
-
-    doc.setProperties({
-      title: `AI-Readiness-Report-${company || 'Your Company'}`,
-      subject: 'AI Readiness Assessment',
-      author: 'Lean Solutions Group',
-    });
-
-    doc.save(`AI-Readiness-Report-${(company || 'Your Company').replace(/\s+/g, '-')}.pdf`);
-
-    // Cleanup
-    document.body.removeChild(container);
+      // Use html2canvas with optimized settings
+      await doc.html(container, {
+        x: 20,
+        y: 20,
+        width: 555, // A4 width minus margins
+        html2canvas: {
+          scale: 1,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          width: 595,
+          height: container.scrollHeight,
+        },
+        callback: function(doc) {
+          // Set document properties
+          doc.setProperties({
+            title: `AI-Readiness-Report-${company || 'Your Company'}`,
+            subject: 'AI Readiness Assessment',
+            author: 'Lean Solutions Group',
+          });
+          
+          // Save the PDF
+          doc.save(`AI-Readiness-Report-${(company || 'Your Company').replace(/\s+/g, '-')}.pdf`);
+        }
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      // Cleanup
+      document.body.removeChild(container);
+    }
   };
 
   const getSectionName = (key: string): string => {
