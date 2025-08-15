@@ -7,9 +7,6 @@ import { z } from 'zod';
 import { questions } from '@/data/questions';
 
 const formSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  company: z.string().min(1, 'Please enter your company name'),
-  consent: z.boolean().refine(val => val === true, 'You must consent to receive your report'),
   q1: z.array(z.string()).min(1, 'Please select at least one option'),
   q2: z.string().min(1, 'Please select an option'),
   q3: z.string().min(1, 'Please select an option'),
@@ -33,7 +30,6 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   const [showProgress, setShowProgress] = useState(false);
 
   const {
-    register,
     handleSubmit,
     formState: { errors },
     setValue,
@@ -42,7 +38,6 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      company: '',
       q1: [],
       q5: [],
       q6: [],
@@ -88,7 +83,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
     if (isValid) {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
-        // Smooth scroll to top
+        // Scroll to top to align question at screen top
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
@@ -97,6 +92,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   const prevQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      // Scroll to top to align question at screen top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -118,29 +114,34 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
               return (
                 <label 
                   key={option.value} 
-                  className={`flex items-start space-x-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                    isSelected 
-                      ? 'border-blue-500 bg-blue-50 shadow-md' 
-                      : isDisabled
-                      ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
-                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
-                  }`}
+                  className={`option-card ${isSelected ? 'selected' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   <input
                     type="checkbox"
-                    className="mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
+                    className="sr-only"
                     checked={isSelected}
                     onChange={() => handleMultiSelect(question.id as keyof FormData, option.value, question.maxSelections)}
                     disabled={isDisabled}
                   />
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900 text-lg">{option.label}</div>
-                    <div className="text-gray-600 mt-1">{option.description}</div>
-                    {question.maxSelections && (
-                      <div className="text-sm text-gray-500 mt-2">
-                        {Array.isArray(currentValue) ? currentValue.length : 0} of {question.maxSelections} selected
-                      </div>
-                    )}
+                  <div className="flex items-start space-x-4">
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      isSelected ? 'border-accent-500 bg-accent-500' : 'border-gray-300'
+                    }`}>
+                      {isSelected && (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900 text-lg mb-2">{option.label}</div>
+                      <div className="text-gray-600 text-base leading-relaxed">{option.description}</div>
+                      {question.maxSelections && (
+                        <div className="text-sm text-accent-600 font-medium mt-3">
+                          {Array.isArray(currentValue) ? currentValue.length : 0} of {question.maxSelections} selected
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </label>
               );
@@ -157,22 +158,27 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
               return (
                 <label 
                   key={option.value} 
-                  className={`flex items-start space-x-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                    isSelected 
-                      ? 'border-blue-500 bg-blue-50 shadow-md' 
-                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
-                  }`}
+                  className={`option-card ${isSelected ? 'selected' : ''}`}
                 >
                   <input
                     type="radio"
                     name={question.id}
-                    className="mt-1 h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                    className="sr-only"
                     checked={isSelected}
                     onChange={() => handleSingleSelect(question.id as keyof FormData, option.value)}
                   />
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900 text-lg">{option.label}</div>
-                    <div className="text-gray-600 mt-1">{option.description}</div>
+                  <div className="flex items-start space-x-4">
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      isSelected ? 'border-accent-500 bg-accent-500' : 'border-gray-300'
+                    }`}>
+                      {isSelected && (
+                        <div className="w-3 h-3 bg-white rounded-full"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900 text-lg mb-2">{option.label}</div>
+                      <div className="text-gray-600 text-base leading-relaxed">{option.description}</div>
+                    </div>
                   </div>
                 </label>
               );
@@ -190,61 +196,40 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   const isFirstQuestion = currentQuestion === 0;
   
   const canProceed = () => {
-    const questionId = currentQ.id as keyof FormData;
-    const value = watchedValues[questionId];
+    const currentQ = questions[currentQuestion];
+    const currentValue = watchedValues[currentQ.id as keyof FormData];
     
     if (currentQ.type === 'multi') {
-      if (currentQ.maxSelections) {
-        return Array.isArray(value) && value.length > 0 && value.length <= currentQ.maxSelections;
-      }
-      return Array.isArray(value) && value.length > 0;
-    } else if (currentQ.type === 'single') {
-      return value && value !== '';
+      return Array.isArray(currentValue) && currentValue.length > 0;
     }
-    return false;
-  };
-
-  const getProgressPercentage = () => {
-    return ((currentQuestion + 1) / questions.length) * 100;
+    
+    return currentValue && currentValue !== '';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Progress Bar */}
-      {showProgress && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b">
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">
-                Question {currentQuestion + 1} of {questions.length}
-              </span>
-              <span className="text-sm text-gray-500">
-                {Math.round(getProgressPercentage())}% complete
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${getProgressPercentage()}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className={`pt-${showProgress ? '24' : '8'} pb-16`}>
+    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100">
+      <div className="pt-8 pb-16">
         <div className="max-w-4xl mx-auto px-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Question Card */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 border border-gray-100">
-              {/* Question Header */}
+            {/* Progress Bar */}
+            {showProgress && (
               <div className="mb-8">
-                {!isFirstQuestion && (
-                  <div className="text-sm text-blue-600 font-medium mb-2">
-                    {currentQ.category}
-                  </div>
-                )}
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-600">Question {currentQuestion + 1} of {questions.length}</span>
+                  <span className="text-sm font-medium text-accent-600">{Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="accent-gradient h-2 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            {/* Question Card */}
+            <div className="question-card">
+              <div className="mb-8">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
                   {currentQ.title}
                 </h2>
@@ -253,17 +238,16 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                 </p>
               </div>
 
-              {/* Question Content */}
               <div className="mb-8">
                 {renderQuestion(currentQ)}
               </div>
 
-              {/* Error Message */}
+              {/* Error Display */}
               {errors[currentQ.id as keyof FormData] && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex">
+                <div className="mb-6">
+                  <div className="flex items-start p-4 bg-red-50 border border-red-200 rounded-xl">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="h-6 w-6 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -282,7 +266,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                   type="button"
                   onClick={prevQuestion}
                   disabled={isFirstQuestion}
-                  className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ← Previous
                 </button>
@@ -292,7 +276,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                     type="button"
                     onClick={nextQuestion}
                     disabled={!canProceed()}
-                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Continue →
                   </button>
@@ -300,7 +284,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                   <button
                     type="submit"
                     disabled={!canProceed() || isLoading}
-                    className="px-10 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <span className="flex items-center">
@@ -317,62 +301,6 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                 )}
               </div>
             </div>
-
-            {/* Email and Consent (shown on last question) */}
-            {isLastQuestion && (
-              <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 border border-gray-100 border-t-4 border-blue-500">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h3>
-                
-                <div className="space-y-6">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      {...register('email')}
-                      type="email"
-                      id="email"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                      placeholder="your@email.com"
-                    />
-                    {errors.email && (
-                      <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Company Name
-                    </label>
-                    <input
-                      {...register('company')}
-                      type="text"
-                      id="company"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                      placeholder="Your Company"
-                    />
-                    {errors.company && (
-                      <p className="mt-2 text-sm text-red-600">{errors.company.message}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <input
-                      {...register('consent')}
-                      type="checkbox"
-                      id="consent"
-                      className="mt-1 h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label htmlFor="consent" className="text-sm text-gray-700 leading-relaxed">
-                      I consent to receive my AI Readiness report via email. I understand that my responses will be used to generate a personalized report and may be stored for analysis purposes.
-                    </label>
-                  </div>
-                  {errors.consent && (
-                    <p className="mt-2 text-sm text-red-600">{errors.consent.message}</p>
-                  )}
-                </div>
-              </div>
-            )}
           </form>
         </div>
       </div>

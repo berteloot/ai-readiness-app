@@ -2,10 +2,17 @@
 
 import { useState } from 'react';
 import AssessmentForm from '@/components/AssessmentForm';
+import ContactModal from '@/components/ContactModal';
 import PDFGenerator from '@/components/PDFGenerator';
 import { z } from 'zod';
 
 type FormData = z.infer<typeof import('@/components/AssessmentForm').default extends React.ComponentType<infer P> ? P : never>;
+
+interface ContactData {
+  email: string;
+  company: string;
+  consent: boolean;
+}
 
 interface AssessmentResult {
   score: number;
@@ -20,11 +27,19 @@ interface AssessmentResult {
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AssessmentResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [assessmentData, setAssessmentData] = useState<FormData | null>(null);
 
-  const handleSubmit = async (data: FormData) => {
+  const handleAssessmentComplete = (data: FormData) => {
+    setAssessmentData(data);
+    setShowContactModal(true);
+  };
+
+  const handleContactSubmit = async (contactData: ContactData) => {
     setIsLoading(true);
-    setError(null);
+    setError('');
+    setShowContactModal(false);
     
     try {
       const response = await fetch('/api/submit', {
@@ -32,7 +47,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...assessmentData!, ...contactData }),
       });
 
       const result = await response.json();
@@ -52,7 +67,16 @@ export default function Home() {
   if (result) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 py-12">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-4xl mx-auto px-6 relative">
+          {/* PDF Download Button - Top Right */}
+          <div className="absolute top-0 right-0">
+            <PDFGenerator 
+              result={result} 
+              aiReport={result.aiReport || ''} 
+              company={result.company || 'Your Company'} 
+            />
+          </div>
+
           {/* Success Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
@@ -101,9 +125,23 @@ export default function Home() {
               </div>
             </div>
 
+            {/* AI Report Display */}
+            {result.aiReport && (
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-8 rounded-2xl border border-gray-200 mb-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">📋 AI-Generated Analysis & Recommendations</h3>
+                <div className="bg-white p-6 rounded-xl border border-gray-200">
+                  <div className="prose prose-lg max-w-none">
+                    <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed text-sm">
+                      {result.aiReport}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* What&apos;s Next Section */}
             <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-8 rounded-2xl border border-gray-200">
-                              <h3 className="text-2xl font-bold text-gray-900 mb-6">What&apos;s Next?</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">What&apos;s Next?</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3 text-lg">Immediate Actions</h4>
@@ -113,11 +151,11 @@ export default function Home() {
                       Check your email for the detailed report
                     </li>
                     <li className="flex items-center">
-                      <span className="text-green-500 mr-3">📊</span>
+                      <span className="text-blue-500 mr-3">📊</span>
                       Review your readiness breakdown by section
                     </li>
                     <li className="flex items-center">
-                      <span className="text-green-500 mr-3">🛣️</span>
+                      <span className="text-blue-500 mr-3">🛣️</span>
                       Follow the 30-60-90 day roadmap
                     </li>
                   </ul>
@@ -145,22 +183,15 @@ export default function Home() {
 
           {/* Action Buttons */}
           <div className="text-center space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <PDFGenerator 
-                result={result} 
-                aiReport={result.aiReport || ''} 
-                company={result.company || 'Your Company'} 
-              />
-              <button
-                onClick={() => {
-                  setResult(null);
-                  setError(null);
-                }}
-                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Take Another Assessment
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setResult(null);
+                setError('');
+              }}
+              className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Take Another Assessment
+            </button>
             <div className="text-sm text-gray-500">
               Perfect for comparing different departments or tracking progress over time
             </div>
@@ -171,28 +202,43 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100">
       {/* Hero Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <div className="max-w-4xl mx-auto px-6 py-20 md:py-28">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            <div className="inline-flex items-center justify-center w-20 h-20 accent-gradient rounded-full mb-8 shadow-lg">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 leading-tight">
               AI Readiness Assessment
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-8">
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-12">
               Evaluate your organization&apos;s readiness for AI transformation with our comprehensive assessment. 
               Get a personalized report with actionable insights and a roadmap for success.
             </p>
             
             {/* Key Benefits */}
-            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="text-center p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">Comprehensive Evaluation</h3>
-                <p className="text-gray-600 text-sm">9 key areas covering technology, data, workforce, and strategy</p>
+            <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div className="w-16 h-16 accent-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-3 text-lg">Comprehensive Evaluation</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">9 key areas covering technology, data, workforce, and strategy</p>
               </div>
-              <div className="text-center p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">Instant Delivery</h3>
-                <p className="text-gray-600 text-sm">Detailed report sent directly to your email</p>
+              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div className="w-16 h-16 accent-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-3 text-lg">Instant Delivery</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">Detailed report sent directly to your email</p>
               </div>
             </div>
           </div>
@@ -200,8 +246,8 @@ export default function Home() {
       </div>
 
       {/* Main Assessment */}
-      <div className="py-12">
-        {error && (
+      <div className="py-16">
+        {error && error !== '' && (
           <div className="max-w-4xl mx-auto px-6 mb-8">
             <div className="bg-red-50 border border-red-200 rounded-xl p-6">
               <div className="flex">
@@ -219,12 +265,12 @@ export default function Home() {
           </div>
         )}
 
-        <AssessmentForm onSubmit={handleSubmit} isLoading={isLoading} />
+        <AssessmentForm onSubmit={handleAssessmentComplete} isLoading={isLoading} />
       </div>
 
       {/* Footer */}
       <div className="bg-white border-t mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="text-center">
             <div className="text-gray-500 mb-4">
               <p className="text-lg">AI Readiness Assessment Tool</p>
@@ -238,6 +284,15 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {showContactModal && assessmentData && (
+        <ContactModal
+          isOpen={showContactModal}
+          onClose={() => setShowContactModal(false)}
+          onSubmit={handleContactSubmit}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }

@@ -3,31 +3,55 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --accent-color: #5c5bfe;
+  --accent-hover: #4a49e8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b7280;
+  --background-primary: #ffffff;
+  --background-secondary: #f8fafc;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--text-primary);
+  background: var(--background-primary);
+  line-height: 1.6;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  .accent-gradient {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #7c7cfe 100%);
+  }
+  
+  .accent-border {
+    border-color: var(--accent-color);
+  }
+  
+  .accent-text {
+    color: var(--accent-color);
+  }
+  
+  .accent-bg {
+    background-color: var(--accent-color);
+  }
+  
+  .question-card {
+    @apply bg-white rounded-2xl shadow-lg border border-gray-100 p-8 md:p-12 max-w-4xl mx-auto;
+  }
+  
+  .option-card {
+    @apply p-6 rounded-xl border-2 border-gray-200 hover:border-accent-500 hover:shadow-md transition-all duration-200 cursor-pointer;
+  }
+  
+  .option-card.selected {
+    @apply border-accent-500 bg-accent-50 shadow-md;
+  }
+  
+  .btn-primary {
+    @apply px-8 py-4 bg-accent-500 text-white rounded-xl hover:bg-accent-600 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium;
   }
 }
