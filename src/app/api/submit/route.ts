@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { scoreAnswers, type Answers, type ScoreResult } from '@/lib/scoring';
 import { buildReportPrompt } from '@/lib/prompt';
 import { PrismaClient } from '@prisma/client';
+import { validateBusinessEmail } from '@/lib/emailValidation';
 
 const prisma = new PrismaClient();
 
@@ -38,6 +39,20 @@ export async function POST(request: NextRequest) {
         { error: 'Email, company name, and consent are required' },
         { status: 400 }
       );
+    }
+
+    // Validate business email
+    const emailValidation = validateBusinessEmail(email);
+    if (!emailValidation.isValid) {
+      return NextResponse.json(
+        { error: emailValidation.reason || 'Invalid email address' },
+        { status: 400 }
+      );
+    }
+
+    // Strongly encourage business emails but allow personal ones
+    if (!emailValidation.isBusiness) {
+      console.log(`Personal email detected: ${email} for company: ${company}`);
     }
 
     // Calculate score

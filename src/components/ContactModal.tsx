@@ -4,9 +4,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import PDFGenerator from './PDFGenerator';
+import { validateBusinessEmail, getEmailValidationMessage } from '@/lib/emailValidation';
 
 const contactSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string()
+    .min(1, 'Email is required')
+    .refine((email) => {
+      const validation = validateBusinessEmail(email);
+      return validation.isValid;
+    }, 'Please enter a valid email address')
+    .refine((email) => {
+      const validation = validateBusinessEmail(email);
+      return validation.isBusiness; // ONLY allow business emails
+    }, 'Business email address required - personal and generic emails are not accepted'),
   company: z.string().min(1, 'Please enter your company name'),
   consent: z.boolean().refine(val => val === true, 'You must consent to receive your report'),
 });
@@ -59,9 +69,12 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<ContactData>({
     resolver: zodResolver(contactSchema),
   });
+
+  const watchedValues = watch();
 
 
 
@@ -89,18 +102,73 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address
+                  Business Email Address
+                  <span className="text-xs font-normal text-red-500 ml-2">(Required - No personal emails)</span>
                 </label>
                 <input
                   {...register('email')}
                   type="email"
                   id="email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg transition-all duration-200"
+                  className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg transition-all duration-200 ${
+                    watchedValues.email ? 
+                      (validateBusinessEmail(watchedValues.email).isBusiness ? 
+                        'border-green-300 bg-green-50' : 
+                        'border-red-300 bg-red-50'
+                      ) : 
+                      'border-gray-300'
+                  }`}
                   placeholder="your@email.com"
                 />
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                {watchedValues.email && !errors.email && (
+                  <div className="mt-2">
+                    {(() => {
+                      const validation = validateBusinessEmail(watchedValues.email);
+                      if (validation.isBusiness) {
+                        return (
+                          <p className="text-sm text-green-600 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            ✅ Business email verified - Report generation allowed
+                          </p>
+                        );
+                      } else {
+                        return (
+                          <p className="text-sm text-red-600 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            ❌ Personal/Generic email - Report generation blocked
+                          </p>
+                        );
+                      }
+                    })()}
+                  </div>
                 )}
+                {errors.email && (
+                  <div className="mt-2">
+                    <p className="text-sm text-red-600">{errors.email.message}</p>
+                    {(() => {
+                      const validation = validateBusinessEmail(watchedValues.email || '');
+                      if (validation.suggestions && validation.suggestions.length > 0) {
+                        return (
+                          <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-xs text-blue-700 font-medium">💡 Tip:</p>
+                            {validation.suggestions.map((suggestion, index) => (
+                              <p key={index} className="text-xs text-blue-600 mt-1">{suggestion}</p>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                )}
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-xs text-red-700">
+                    <strong>⚠️ STRICT EMAIL REQUIREMENT:</strong> Only business email addresses are accepted. Personal emails (Gmail, Yahoo, etc.) and generic/test emails are NOT allowed. You must use your company email address.
+                  </p>
+                </div>
               </div>
 
               <div>

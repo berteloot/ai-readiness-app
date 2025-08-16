@@ -10,6 +10,7 @@ A modern, production-ready AI Readiness Assessment tool built with Next.js 14, T
 - **⚡ Real-time Scoring**: Instant calculation of AI readiness scores
 - **📧 Email Delivery**: Automated report delivery via email
 - **🔒 Privacy First**: Secure data handling with user consent
+- **📧 Business Email Validation**: Prevents generic/disposable emails with real-time feedback
 
 ## 🏗️ Tech Stack
 
@@ -172,6 +173,7 @@ SITE_URL=https://yourdomain.com
 - [x] Scoring algorithm
 - [x] Basic UI/UX
 - [x] Local score calculation
+- [x] Business email validation
 
 ### Phase 2: AI Integration 🚧
 - [ ] OpenAI API integration

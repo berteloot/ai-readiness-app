@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
     // This will create the tables based on your Prisma schema
     await prisma.$executeRaw`CREATE SCHEMA IF NOT EXISTS public`;
     
-    // Push the schema to create tables
+    // Push the schema to create tables (without resetting data)
     const { execSync } = require('child_process');
-    execSync('npx prisma db push --force-reset', { 
+    execSync('npx prisma db push', { 
       stdio: 'inherit',
       env: process.env 
     });

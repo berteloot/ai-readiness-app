@@ -27,7 +27,7 @@ interface AssessmentResult {
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AssessmentResult | null>(null);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [assessmentData, setAssessmentData] = useState<FormData | null>(null);
 
@@ -38,7 +38,7 @@ export default function Home() {
 
   const handleContactSubmit = async (contactData: ContactData) => {
     setIsLoading(true);
-    setError('');
+    setError(null);
     
     try {
       const response = await fetch('/api/submit', {
@@ -62,7 +62,7 @@ export default function Home() {
         ...result,
         aiReport
       });
-    } catch (err) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -72,7 +72,7 @@ export default function Home() {
   const handleCloseModal = () => {
     setShowContactModal(false);
     setResult(null);
-    setError('');
+    setError(null);
     setAssessmentData(null);
   };
 
@@ -122,7 +122,7 @@ export default function Home() {
 
       {/* Main Assessment */}
       <div className="py-12 sm:py-16">
-        {error && error !== '' && (
+        {error && (
           <div className="max-w-4xl mx-auto mobile-optimized mb-6 sm:mb-8">
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6">
               <div className="flex">
