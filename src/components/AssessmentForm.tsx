@@ -27,7 +27,6 @@ interface AssessmentFormProps {
 
 export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [showProgress, setShowProgress] = useState(false);
 
   const {
     handleSubmit,
@@ -35,6 +34,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
     setValue,
     watch,
     trigger,
+    reset,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,12 +47,21 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
 
   const watchedValues = watch();
 
-  // Show progress bar after first question
+  // Reset form and go to first question when component mounts or resets
   useEffect(() => {
-    if (currentQuestion > 0) {
-      setShowProgress(true);
-    }
-  }, [currentQuestion]);
+    setCurrentQuestion(0);
+    reset({
+      q1: [],
+      q2: '',
+      q3: '',
+      q4: '',
+      q5: [],
+      q6: [],
+      q7: '',
+      q8: [],
+      q9: '',
+    });
+  }, [reset]);
 
   const handleMultiSelect = (questionId: keyof FormData, value: string, maxSelections?: number) => {
     const currentValues = watchedValues[questionId] as string[] || [];
@@ -98,6 +107,8 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
     if (isValid) {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
+        // Scroll to top of the form for better UX
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   };
@@ -105,6 +116,8 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   const prevQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      // Scroll to top of the form for better UX
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -253,21 +266,19 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
       <div className="pt-12 pb-16">
         <div className="max-w-4xl mx-auto px-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Progress Bar */}
-            {showProgress && (
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-text-secondary">Question {currentQuestion + 1} of {questions.length}</span>
-                  <span className="text-sm font-medium text-primary-600">{Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete</span>
-                </div>
-                <div className="w-full bg-neutral-200 rounded-full h-2">
-                  <div 
-                    className="primary-gradient h-2 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
-                  ></div>
-                </div>
+            {/* Progress Bar - Always visible */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-text-secondary">Question {currentQuestion + 1} of {questions.length}</span>
+                <span className="text-sm font-medium text-primary-600">{Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete</span>
               </div>
-            )}
+              <div className="w-full bg-neutral-200 rounded-full h-2">
+                <div 
+                  className="primary-gradient h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
 
             {/* Question Card */}
             <div className="question-card">

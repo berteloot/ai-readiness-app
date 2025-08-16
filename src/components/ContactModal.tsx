@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-
+import { generateAIReadinessPDF, ReportData } from './PDFGenerator';
 
 
 const contactSchema = z.object({
@@ -18,6 +18,7 @@ interface ContactModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: ContactData) => void;
+  onStartOver?: () => void;
   isLoading?: boolean;
   result?: {
     score: number;
@@ -55,7 +56,7 @@ function convertMarkdownToHTML(markdown: string): string {
     .replace(/<\/p><\/p>/g, '</p>');
 }
 
-export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, result, assessmentData }: ContactModalProps) {
+export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, isLoading, result, assessmentData }: ContactModalProps) {
   const {
     register,
     handleSubmit,
@@ -67,7 +68,77 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
 
   const watchedValues = watch();
 
+  // Transform result data for PDF generation
+  const transformDataForPDF = (): ReportData | null => {
+    if (!result || !assessmentData) return null;
 
+    // Map section keys to meaningful labels and max scores
+    const sectionMapping: Record<string, { label: string; max: number; title: string }> = {
+      s1: { label: "Current Tools in Use", max: 8, title: "Current Automation Level" },
+      s2: { label: "Data Maturity", max: 4, title: "Data Infrastructure Maturity" },
+      s3: { label: "Workforce Readiness", max: 4, title: "Workforce AI Adoption Readiness" },
+      s4: { label: "Operational Scalability", max: 4, title: "Scalability of CX Operations" },
+      s5: { label: "KPI Tracking", max: 5, title: "KPI Tracking Sophistication" },
+      s6: { label: "Security & Compliance", max: 6, title: "Security & Compliance" },
+      s7: { label: "Executive Support", max: 4, title: "Budget & Executive Buy-In" }
+    };
+
+    // Create score items from the breakdown
+    const scoreItems = Object.entries(result.breakdown).map(([key, score]) => {
+      const section = sectionMapping[key];
+      if (section) {
+        return {
+          key: key,
+          label: section.label,
+          score: score,
+          max: section.max,
+          note: section.title
+        };
+      }
+      return {
+        key: key,
+        label: key,
+        score: score,
+        max: 0,
+        note: ''
+      };
+    });
+
+    return {
+      company: assessmentData.company || 'Your Company',
+      dateISO: new Date().toISOString(),
+      score: result.score,
+      maxScore: result.maxScore,
+      summary: result.aiReport || 'No AI analysis available.',
+      items: scoreItems,
+      orderedKeys: Object.keys(result.breakdown)
+    };
+  };
+
+  const handlePDFDownload = () => {
+    console.log('PDF download clicked');
+    console.log('Result data:', result);
+    console.log('Assessment data:', assessmentData);
+    
+    const pdfData = transformDataForPDF();
+    console.log('Transformed PDF data:', pdfData);
+    
+    if (pdfData) {
+      try {
+        // Use a simple filename to avoid browser restrictions
+        const filename = 'ai-readiness-report.pdf';
+        generateAIReadinessPDF(pdfData, filename);
+        console.log('PDF generation completed');
+      } catch (error) {
+        console.error('PDF generation failed:', error);
+        // Show user-friendly error message
+        alert('PDF generation failed. Please try again or contact support.');
+      }
+    } else {
+      console.error('Failed to transform data for PDF');
+      alert('Unable to generate PDF. Please ensure all data is available.');
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -226,11 +297,16 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
               >
                 Close
               </button>
+              {onStartOver && (
+                <button
+                  onClick={onStartOver}
+                  className="flex-1 btn-accent"
+                >
+                  Start Over
+                </button>
+              )}
               <button
-                onClick={() => {
-                  // TODO: Implement PDF generation if needed
-                  console.log('PDF generation not implemented yet');
-                }}
+                onClick={handlePDFDownload}
                 className="flex-1 btn-primary"
               >
                 Download PDF

@@ -27,7 +27,33 @@ const A4 = { width: 595.28, height: 841.89 }; // jsPDF's default pt size for A4
  * Generate the AI Readiness PDF and trigger a download.
  */
 export function generateAIReadinessPDF(data: ReportData, filename = 'AI-Readiness-Report.pdf') {
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  // Validate input data
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid data provided to PDF generator');
+  }
+  
+  if (typeof data.score !== 'number' || typeof data.maxScore !== 'number') {
+    throw new Error('Score and maxScore must be numbers');
+  }
+  
+  if (!Array.isArray(data.items)) {
+    throw new Error('Items must be an array');
+  }
+  
+  if (typeof data.summary !== 'string') {
+    throw new Error('Summary must be a string');
+  }
+  
+  console.log('PDF generation started with data:', data);
+  
+  try {
+    // Check if jsPDF is available
+    if (typeof jsPDF === 'undefined') {
+      throw new Error('jsPDF library not available');
+    }
+    
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    console.log('jsPDF document created successfully');
   const margin = 56; // 0.78 in
   const pageWidth = A4.width;
   const pageHeight = A4.height;
@@ -290,7 +316,24 @@ export function generateAIReadinessPDF(data: ReportData, filename = 'AI-Readines
   drawFooterAllPages();
 
   // Save
-  doc.save(filename);
+  try {
+    doc.save(filename);
+    console.log('PDF saved successfully:', filename);
+  } catch (saveError) {
+    console.error('Error saving PDF:', saveError);
+    // Try with a simpler filename as fallback
+    try {
+      doc.save('ai-readiness-report.pdf');
+      console.log('PDF saved with fallback filename');
+    } catch (fallbackError) {
+      console.error('Fallback save also failed:', fallbackError);
+      throw fallbackError;
+    }
+  }
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw error;
+  }
 }
 
 /**
