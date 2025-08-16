@@ -25,130 +25,202 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
         compress: true,
       });
 
-      // Set up fonts and colors
-      doc.setFont('helvetica');
-      doc.setTextColor(0, 0, 0);
-
       // Page dimensions
       const pageWidth = 595.28;
       const pageHeight = 841.89;
-      const margin = 40;
+      const margin = 50;
       const contentWidth = pageWidth - (2 * margin);
-      let yPosition = margin + 30;
+      let yPosition = margin + 40;
 
+      // Header with gradient-like effect
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, pageWidth, 120, 'F');
+      
       // Title
-      doc.setFontSize(24);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
       doc.setFont('helvetica', 'bold');
-      doc.text('AI Readiness Assessment Report', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 40;
-
+      doc.text('AI Readiness Assessment Report', pageWidth / 2, 60, { align: 'center' });
+      
       // Company name
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'normal');
+      doc.text(company || 'Your Company', pageWidth / 2, 85, { align: 'center' });
+      
+      // Date
+      doc.setFontSize(12);
+      doc.setTextColor(200, 210, 255);
+      doc.text(`Generated on ${new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })}`, pageWidth / 2, 105, { align: 'center' });
+
+      yPosition = 140;
+
+      // Overall Score Section with enhanced design
+      doc.setFillColor(249, 250, 251);
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(2);
+      doc.roundedRect(margin, yPosition - 25, contentWidth, 100, 8, 8, 'FD');
+      
+      // Score display with better positioning
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text(company || 'Your Company', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 30;
-
-      // Date
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(107, 114, 128);
-      doc.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 40;
-
-      // Overall Score Section
-      doc.setFillColor(249, 250, 251);
-      doc.rect(margin, yPosition - 20, contentWidth, 80, 'F');
-      doc.setDrawColor(229, 231, 235);
-      doc.rect(margin, yPosition - 20, contentWidth, 80, 'S');
-
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
       doc.setTextColor(31, 41, 55);
-      doc.text('Overall Score', margin + 20, yPosition);
+      doc.text('Overall Score', margin + 25, yPosition);
       yPosition += 25;
 
-      // Score display
-      doc.setFontSize(28);
+      // Large score number
+      doc.setFontSize(36);
       doc.setTextColor(37, 99, 235);
-      doc.text(score.toString(), margin + 20, yPosition);
+      doc.text(score.toString(), margin + 25, yPosition);
       
-      doc.setFontSize(12);
-      doc.setTextColor(55, 65, 81);
-      doc.text(`out of ${maxScore} points`, margin + 80, yPosition);
-      yPosition += 20;
-
+      // Score details
       doc.setFontSize(14);
-      doc.setTextColor(5, 150, 105);
-      doc.text(tier, margin + 20, yPosition);
-      yPosition += 60;
+      doc.setTextColor(107, 114, 128);
+      doc.text(`out of ${maxScore} points`, margin + 120, yPosition);
+      yPosition += 25;
+
+      // Tier with colored background
+      const tierWidth = doc.getTextWidth(tier) + 20;
+      doc.setFillColor(5, 150, 105);
+      doc.roundedRect(margin + 25, yPosition - 15, tierWidth, 25, 5, 5, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(tier, margin + 25 + (tierWidth / 2), yPosition, { align: 'center' });
+      
+      yPosition += 50;
 
       // Score Breakdown Section
-      doc.setFillColor(249, 250, 251);
-      doc.rect(margin, yPosition - 20, contentWidth, 120, 'F');
+      doc.setFillColor(255, 255, 255);
       doc.setDrawColor(229, 231, 235);
-      doc.rect(margin, yPosition - 20, contentWidth, 120, 'S');
-
-      doc.setFontSize(14);
+      doc.setLineWidth(1);
+      doc.roundedRect(margin, yPosition - 25, contentWidth, 140, 8, 8, 'FD');
+      
+      doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(31, 41, 55);
-      doc.text('Score Breakdown by Section', margin + 20, yPosition);
+      doc.text('Score Breakdown by Section', margin + 25, yPosition);
       yPosition += 25;
 
-      // Breakdown items
+      // Section header
+      doc.setFillColor(248, 250, 252);
+      doc.rect(margin + 20, yPosition - 15, contentWidth - 40, 20, 'F');
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(margin + 20, yPosition - 15, contentWidth - 40, 20, 'S');
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Section', margin + 35, yPosition);
+      doc.text('Score', margin + contentWidth - 60, yPosition);
+      yPosition += 20;
+
+      // Breakdown items with alternating row colors
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      Object.entries(breakdown).forEach(([key, value]) => {
+      Object.entries(breakdown).forEach(([key, value], index) => {
         const sectionName = getSectionName(key);
         const maxSectionScore = getMaxScore(key);
         
+        // Alternate row colors
+        if (index % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+        } else {
+          doc.setFillColor(255, 255, 255);
+        }
+        doc.rect(margin + 20, yPosition - 12, contentWidth - 40, 18, 'F');
+        
         doc.setTextColor(31, 41, 55);
-        doc.text(sectionName, margin + 20, yPosition);
+        doc.text(sectionName, margin + 35, yPosition);
         
         doc.setTextColor(37, 99, 235);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${value}/${maxSectionScore}`, margin + contentWidth - 20, yPosition, { align: 'right' });
+        doc.text(`${value}/${maxSectionScore}`, margin + contentWidth - 60, yPosition);
         
-        yPosition += 15;
+        yPosition += 18;
       });
 
       yPosition += 30;
 
-      // Executive Summary
-      doc.setFontSize(16);
+      // Executive Summary with enhanced styling
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(37, 99, 235);
+      doc.setLineWidth(3);
+      doc.roundedRect(margin, yPosition - 25, contentWidth, 30, 8, 8, 'FD');
+      
+      doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(31, 41, 55);
-      doc.text('Executive Summary', margin, yPosition);
-      yPosition += 25;
+      doc.setTextColor(37, 99, 235);
+      doc.text('Executive Summary', margin + 25, yPosition);
+      yPosition += 35;
 
-      // AI Report content
-      doc.setFontSize(10);
+      // AI Report content with improved formatting
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor(55, 65, 81);
+      doc.setLineWidth(0.5);
 
       const paragraphs = aiReport.split(/\n\s*\n/).filter(p => p.trim());
       
-      paragraphs.forEach((paragraph) => {
-        const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 20);
-        
-        // Check if we need a new page
-        if (yPosition + (lines.length * 12) > pageHeight - margin) {
-          doc.addPage();
-          yPosition = margin + 30;
+      paragraphs.forEach((paragraph: string) => {
+        // Handle markdown-style headers
+        if (paragraph.startsWith('#')) {
+          const headerLevel = paragraph.match(/^#+/)?.[0].length || 1;
+          const headerText = paragraph.replace(/^#+\s*/, '').trim();
+          
+          if (yPosition + 30 > pageHeight - margin) {
+            doc.addPage();
+            yPosition = margin + 40;
+          }
+          
+          doc.setFontSize(16 - headerLevel);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(37, 99, 235);
+          doc.text(headerText, margin + 10, yPosition);
+          yPosition += 20;
+          
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(55, 65, 81);
+        } else {
+          const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 20);
+          
+          // Check if we need a new page
+          if (yPosition + (lines.length * 14) > pageHeight - margin) {
+            doc.addPage();
+            yPosition = margin + 40;
+          }
+          
+          lines.forEach((line: string) => {
+            doc.text(line, margin + 15, yPosition);
+            yPosition += 14;
+          });
+          
+          yPosition += 8; // Space between paragraphs
         }
-        
-        lines.forEach((line: string) => {
-          doc.text(line, margin + 10, yPosition);
-          yPosition += 12;
-        });
-        
-        yPosition += 8; // Space between paragraphs
       });
+
+      // Footer
+      const footerY = pageHeight - 40;
+      doc.setDrawColor(229, 231, 235);
+      doc.line(margin, footerY, pageWidth - margin, footerY);
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(156, 163, 175);
+      doc.text('Generated by Lean Solutions Group', pageWidth / 2, footerY + 15, { align: 'center' });
+      doc.text('AI Readiness Assessment Tool', pageWidth / 2, footerY + 28, { align: 'center' });
 
       // Set document properties
       doc.setProperties({
         title: `AI-Readiness-Report-${company || 'Your Company'}`,
         subject: 'AI Readiness Assessment',
         author: 'Lean Solutions Group',
+        creator: 'AI Readiness Assessment Tool',
+        keywords: 'AI, Readiness, Assessment, Digital Transformation',
       });
 
       // Save the PDF
