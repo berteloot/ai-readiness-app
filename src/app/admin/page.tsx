@@ -43,7 +43,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const [isSettingUpDb, setIsSettingUpDb] = useState(false);
+
   const [isDeletingUsers, setIsDeletingUsers] = useState(false);
   const [error, setError] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
@@ -149,36 +149,7 @@ export default function AdminPage() {
     setSelectedUsers(new Set());
   };
 
-  const setupDatabase = async () => {
-    setIsSettingUpDb(true);
-    setError('');
-    
-    try {
-      const response = await fetch('/api/admin/setup-db', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password }),
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Database setup successful:', data);
-        // Refresh data after setup
-        fetchSubmissions();
-        fetchUsers();
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        setError(`Database setup failed: ${errorData.message || 'Unknown error'}`);
-      }
-    } catch (err) {
-      console.error('Database setup error:', err);
-      setError('Database setup failed: Network error');
-    } finally {
-      setIsSettingUpDb(false);
-    }
-  };
 
   const handleUserSelection = (userId: string) => {
     const newSelected = new Set(selectedUsers);
@@ -382,14 +353,7 @@ This action cannot be undone.`;
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <div className="flex space-x-3">
-              <button
-                onClick={setupDatabase}
-                disabled={isSettingUpDb}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                title="Setup database tables (safe - won't delete existing data)"
-              >
-                {isSettingUpDb ? 'Setting up...' : 'Setup Database'}
-              </button>
+
               <button
                 onClick={async () => {
                   try {
