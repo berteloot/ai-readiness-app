@@ -4,19 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { validateBusinessEmail, getEmailValidationMessage } from '@/lib/emailValidation';
+
 
 const contactSchema = z.object({
-  email: z.string()
-    .min(1, 'Email is required')
-    .refine((email) => {
-      const validation = validateBusinessEmail(email);
-      return validation.isValid;
-    }, 'Please enter a valid email address')
-    .refine((email) => {
-      const validation = validateBusinessEmail(email);
-      return validation.isBusiness; // ONLY allow business emails
-    }, 'Business email address required - personal and generic emails are not accepted'),
+  email: z.string().email('Please enter a valid email address'),
   company: z.string().min(1, 'Please enter your company name'),
   consent: z.boolean().refine(val => val === true, 'You must consent to receive your report'),
 });
@@ -76,15 +67,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
 
   const watchedValues = watch();
 
-  // Safe email validation with error handling
-  const safeEmailValidation = (email: string) => {
-    try {
-      return validateBusinessEmail(email);
-    } catch (error) {
-      console.error('Email validation error:', error);
-      return { isValid: false, isBusiness: false, reason: 'Validation error occurred' };
-    }
-  };
+
 
   if (!isOpen) return null;
 
@@ -106,89 +89,27 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
               <h3 className="text-2xl font-bold text-text-primary mb-2">Get Your Report</h3>
               <p className="text-text-secondary">Enter your details to receive your AI Readiness report</p>
               
-              {/* Critical Email Warning */}
-              <div className="mt-4 p-4 bg-error/10 border-2 border-error/20 rounded-md">
-                <div className="flex items-center justify-center space-x-2">
-                  <svg className="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm font-semibold text-error">
-                    BUSINESS EMAIL REQUIRED - Personal emails will be rejected
-                  </span>
-                </div>
-              </div>
+
             </div>
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-text-secondary mb-2">
-                  Business Email Address
-                  <span className="text-xs font-normal text-error ml-2">(Required - No personal emails)</span>
+                  Email Address
                 </label>
                 <input
                   {...register('email')}
                   type="email"
                   id="email"
-                  className={`w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-lg transition-all duration-200 ${
-                    watchedValues.email ? 
-                      (safeEmailValidation(watchedValues.email).isBusiness ? 
-                        'border-success bg-success/10' : 
-                        'border-error bg-error/10'
-                      ) : 
-                      'border-border-default'
-                  }`}
+                  className="w-full px-4 py-3 border border-neutral-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-lg transition-all duration-200"
                   placeholder="your@email.com"
                 />
-                {watchedValues.email && !errors.email && (
-                  <div className="mt-2">
-                    {(() => {
-                      const validation = safeEmailValidation(watchedValues.email);
-                      if (validation.isBusiness) {
-                        return (
-                          <p className="text-sm text-success flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            ✅ Business email verified - Report generation allowed
-                          </p>
-                        );
-                      } else {
-                        return (
-                          <p className="text-sm text-error flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            ❌ Personal/Generic email - Report generation blocked
-                          </p>
-                        );
-                      }
-                    })()}
-                  </div>
-                )}
                 {errors.email && (
                   <div className="mt-2">
                     <p className="text-sm text-error">{errors.email.message}</p>
-                    {(() => {
-                      const validation = safeEmailValidation(watchedValues.email || '');
-                      if (validation.suggestions && validation.suggestions.length > 0) {
-                        return (
-                          <div className="mt-1 p-2 bg-primary-50 border border-primary-200 rounded-md">
-                            <p className="text-xs text-primary-700 font-medium">💡 Tip:</p>
-                            {validation.suggestions.map((suggestion, index) => (
-                              <p key={index} className="text-xs text-primary-600 mt-1">{suggestion}</p>
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
                   </div>
                 )}
-                <div className="mt-2 p-3 bg-error/10 border border-error/20 rounded-md">
-                  <p className="text-xs text-error">
-                    <strong>⚠️ STRICT EMAIL REQUIREMENT:</strong> Only business email addresses are accepted. Personal emails (Gmail, Yahoo, etc.) and generic/test emails are NOT allowed. You must use your company email address.
-                  </p>
-                </div>
+
               </div>
 
               <div>
@@ -232,12 +153,10 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading || (watchedValues.email && !safeEmailValidation(watchedValues.email).isBusiness)}
+                  disabled={isLoading}
                   className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Generating...' : 
-                   (watchedValues.email && !safeEmailValidation(watchedValues.email).isBusiness) ? 
-                   'Business Email Required' : 'Get Report'}
+                  {isLoading ? 'Generating...' : 'Get Report'}
                 </button>
               </div>
             </form>

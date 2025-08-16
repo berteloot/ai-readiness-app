@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { scoreAnswers, type Answers, type ScoreResult } from '@/lib/scoring';
 import { buildReportPrompt } from '@/lib/prompt';
 import { PrismaClient } from '@prisma/client';
-import { validateBusinessEmail } from '@/lib/emailValidation';
+
 
 const prisma = new PrismaClient();
 
@@ -41,22 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate business email - STRICT REQUIREMENT
-    const emailValidation = validateBusinessEmail(email);
-    if (!emailValidation.isValid) {
-      return NextResponse.json(
-        { error: emailValidation.reason || 'Invalid email address' },
-        { status: 400 }
-      );
-    }
 
-    // ONLY allow business emails - block personal/generic
-    if (!emailValidation.isBusiness) {
-      return NextResponse.json(
-        { error: 'Business email address required. Personal and generic emails are not accepted.' },
-        { status: 400 }
-      );
-    }
 
     // Calculate score
     const result = scoreAnswers(answers as Answers);
