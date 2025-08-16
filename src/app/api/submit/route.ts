@@ -202,6 +202,9 @@ function convertMarkdownToHTML(markdown: string): string {
     .replace(/\n\n/g, '</p><p style="margin: 10px 0;">')
     // Convert single line breaks
     .replace(/\n/g, '<br>')
+    // Clean up citations to only show organization names, not full URLs
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links but keep text
+    .replace(/https?:\/\/[^\s]+/g, '') // Remove any remaining URLs
     // Wrap in paragraphs
     .replace(/^(.*)$/gm, '<p style="margin: 10px 0;">$1</p>')
     // Clean up empty paragraphs
@@ -466,6 +469,9 @@ function generateEmailText(result: ScoreResult, aiReport: string, answers: Answe
     .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
     .replace(/\*(.*?)\*/g, '$1') // Remove italic
     .replace(/\n\n/g, '\n\n') // Keep paragraph breaks
+    // Clean up citations to only show organization names, not full URLs
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links but keep text
+    .replace(/https?:\/\/[^\s]+/g, '') // Remove any remaining URLs
     .trim();
 
   return `

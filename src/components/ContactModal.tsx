@@ -47,6 +47,9 @@ function convertMarkdownToHTML(markdown: string): string {
     .replace(/\n\n/g, '</p><p class="mb-3">')
     // Convert single line breaks
     .replace(/\n/g, '<br>')
+    // Clean up citations to only show organization names, not full URLs
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links but keep text
+    .replace(/https?:\/\/[^\s]+/g, '') // Remove any remaining URLs
     // Wrap in paragraphs
     .replace(/^(.*)$/gm, '<p class="mb-3">$1</p>')
     // Clean up empty paragraphs

@@ -11,7 +11,7 @@ Critical Rule:
 	•	If a requested data point cannot be found from a credible, cited source, clearly state that it is unavailable rather than inventing it.
 	•	All sources must be from 2023 or newer (no older sources allowed).
 	•	Reputable organizations include: McKinsey & Company, Gartner, Deloitte, PwC, Accenture, Forrester, World Economic Forum, OECD, MIT Technology Review, Harvard Business Review, Stanford AI Index, or equivalent.
-	•	Provide citations with hyperlinks to the original source.
+	•	Provide citations with only the domain name (e.g., "mckinsey.com" or "gartner.org") rather than full URLs, as many links may be broken.
 
 Task: Generate a report grounded in current, verifiable research from 2023 onwards.
 
@@ -64,6 +64,6 @@ Output Requirements:
 	•	Length: 1,500–2,000 words.
 	•	All sources must be from 2023 or newer.
 	•	Flag any section where data was not available instead of making assumptions.
-	•	Include a "Sources" section at the end with all citations.
+	•	Include a "Sources" section at the end with all citations, listing only domain names (e.g., "mckinsey.com", "gartner.org") rather than full URLs.
 `;
 }
