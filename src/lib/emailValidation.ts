@@ -89,13 +89,13 @@ export function validateBusinessEmail(email: string): EmailValidationResult {
     }
   }
 
-  // Check for personal domains (warn but allow)
+  // Check for personal domains (block completely)
   if (PERSONAL_DOMAINS.has(domain)) {
     return {
-      isValid: true,
+      isValid: false,
       isBusiness: false,
-      reason: 'Personal email detected',
-      suggestions: ['Consider using your company email for business purposes']
+      reason: 'Personal email domains are not accepted',
+      suggestions: ['Please use your company email address']
     };
   }
 

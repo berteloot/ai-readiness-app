@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate business email
+    // Validate business email - STRICT REQUIREMENT
     const emailValidation = validateBusinessEmail(email);
     if (!emailValidation.isValid) {
       return NextResponse.json(
@@ -50,9 +50,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Strongly encourage business emails but allow personal ones
+    // ONLY allow business emails - block personal/generic
     if (!emailValidation.isBusiness) {
-      console.log(`Personal email detected: ${email} for company: ${company}`);
+      return NextResponse.json(
+        { error: 'Business email address required. Personal and generic emails are not accepted.' },
+        { status: 400 }
+      );
     }
 
     // Calculate score
