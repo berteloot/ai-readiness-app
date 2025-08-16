@@ -161,12 +161,11 @@ export default function Home() {
               <p className="text-xs sm:text-sm">Powered by Lean Solutions Group</p>
             </div>
             <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs sm:text-sm text-neutral-400">
-              <a href="https://www.leangroup.com/terms-privacy" className="hover:text-accent-400 transition-colors">Privacy Policy</a>
-              <a href="https://www.leangroup.com/terms-privacy" className="hover:text-accent-400 transition-colors">Terms of Service</a>
-              <a href="https://www.leangroup.com/" className="hover:text-accent-400 transition-colors">Contact Support</a>
+              <a href="/privacy-policy" className="hover:text-accent-400 transition-colors">Privacy Policy</a>
+              <a href="/terms-of-service" className="hover:text-accent-400 transition-colors">Terms of Service</a>
             </div>
             <div className="mt-6 text-xs text-neutral-500">
-              <p>© 2024 Lean Solutions Group. All rights reserved.</p>
+              <p>© 2025 Lean Solutions Group. All rights reserved.</p>
             </div>
           </div>
         </div>
