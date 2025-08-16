@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import PDFGenerator from './PDFGenerator';
+
 import { validateBusinessEmail, getEmailValidationMessage } from '@/lib/emailValidation';
 
 const contactSchema = z.object({
@@ -76,7 +76,15 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
 
   const watchedValues = watch();
 
-
+  // Safe email validation with error handling
+  const safeEmailValidation = (email: string) => {
+    try {
+      return validateBusinessEmail(email);
+    } catch (error) {
+      console.error('Email validation error:', error);
+      return { isValid: false, isBusiness: false, reason: 'Validation error occurred' };
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -121,9 +129,9 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
                   {...register('email')}
                   type="email"
                   id="email"
-                  className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg transition-all duration-200 ${
+                  className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-500 text-lg transition-all duration-200 ${
                     watchedValues.email ? 
-                      (validateBusinessEmail(watchedValues.email).isBusiness ? 
+                      (safeEmailValidation(watchedValues.email).isBusiness ? 
                         'border-green-300 bg-green-50' : 
                         'border-red-300 bg-red-50'
                       ) : 
@@ -134,7 +142,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
                 {watchedValues.email && !errors.email && (
                   <div className="mt-2">
                     {(() => {
-                      const validation = validateBusinessEmail(watchedValues.email);
+                      const validation = safeEmailValidation(watchedValues.email);
                       if (validation.isBusiness) {
                         return (
                           <p className="text-sm text-green-600 flex items-center">
@@ -161,7 +169,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
                   <div className="mt-2">
                     <p className="text-sm text-red-600">{errors.email.message}</p>
                     {(() => {
-                      const validation = validateBusinessEmail(watchedValues.email || '');
+                      const validation = safeEmailValidation(watchedValues.email || '');
                       if (validation.suggestions && validation.suggestions.length > 0) {
                         return (
                           <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md">
@@ -224,11 +232,11 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading || (watchedValues.email && !validateBusinessEmail(watchedValues.email).isBusiness)}
+                  disabled={isLoading || (watchedValues.email && !safeEmailValidation(watchedValues.email).isBusiness)}
                   className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Generating...' : 
-                   (watchedValues.email && !validateBusinessEmail(watchedValues.email).isBusiness) ? 
+                   (watchedValues.email && !safeEmailValidation(watchedValues.email).isBusiness) ? 
                    'Business Email Required' : 'Get Report'}
                 </button>
               </div>
@@ -299,11 +307,15 @@ export default function ContactModal({ isOpen, onClose, onSubmit, isLoading, res
               >
                 Close
               </button>
-              <PDFGenerator 
-                result={result} 
-                aiReport={result.aiReport || ''} 
-                company={assessmentData?.company || 'Your Company'} 
-              />
+              <button
+                onClick={() => {
+                  // TODO: Implement PDF generation if needed
+                  console.log('PDF generation not implemented yet');
+                }}
+                className="flex-1 btn-primary"
+              >
+                Download PDF
+              </button>
             </div>
           </>
         )}

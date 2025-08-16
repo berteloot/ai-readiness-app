@@ -43,6 +43,15 @@ export interface EmailValidationResult {
 }
 
 export function validateBusinessEmail(email: string): EmailValidationResult {
+  // Input validation
+  if (!email || typeof email !== 'string') {
+    return {
+      isValid: false,
+      isBusiness: false,
+      reason: 'Invalid email input'
+    };
+  }
+
   const trimmedEmail = email.trim().toLowerCase();
   
   // Basic email format validation
@@ -55,7 +64,16 @@ export function validateBusinessEmail(email: string): EmailValidationResult {
     };
   }
 
-  const [, domain] = trimmedEmail.split('@');
+  const parts = trimmedEmail.split('@');
+  if (parts.length !== 2) {
+    return {
+      isValid: false,
+      isBusiness: false,
+      reason: 'Invalid email format'
+    };
+  }
+  
+  const [, domain] = parts;
   
   // Check for disposable domains
   if (DISPOSABLE_DOMAINS.has(domain)) {
