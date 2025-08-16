@@ -102,7 +102,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
         max: 0,
         note: ''
       };
-    };
+    });
 
     return {
       company: assessmentData.company || 'Your Company',
