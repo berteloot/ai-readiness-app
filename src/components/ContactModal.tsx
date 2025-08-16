@@ -237,34 +237,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
                   Start Over
                 </button>
               )}
-              <button
-                onClick={() => {
-                  // Simple PDF download using the existing PDFGenerator function
-                  const { generateAIReadinessPDF } = require('./PDFGenerator');
-                  const reportData = {
-                    company: assessmentData?.company || 'Your Company',
-                    dateISO: new Date().toISOString(),
-                    score: result.score,
-                    maxScore: result.maxScore,
-                    summary: result.aiReport || 'No AI analysis available.',
-                    items: Object.entries(result.breakdown).map(([key, score]) => ({
-                      key,
-                      label: key,
-                      score: score as number,
-                      max: 0,
-                      note: ''
-                    })),
-                    orderedKeys: Object.keys(result.breakdown)
-                  };
-                  generateAIReadinessPDF(reportData, 'ai-readiness-report.pdf');
-                }}
-                className="flex-1 btn-primary"
-              >
-                <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Download PDF Report
-              </button>
+
             </div>
           </>
         )}

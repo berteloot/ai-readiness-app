@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import AssessmentForm from '@/components/AssessmentForm';
 import ContactModal from '@/components/ContactModal';
-import PDFGenerator from '@/components/PDFGenerator';
 import { z } from 'zod';
 
 type FormData = z.infer<typeof import('@/components/AssessmentForm').default extends React.ComponentType<infer P> ? P : never>;
