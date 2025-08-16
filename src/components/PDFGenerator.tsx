@@ -176,28 +176,77 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             yPosition = margin + 40;
           }
           
-          doc.setFontSize(16 - headerLevel);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(37, 99, 235);
-          doc.text(headerText, margin + 10, yPosition);
-          yPosition += 20;
+          // Different styling for different header levels
+          if (headerLevel === 1) {
+            // Main section headers (e.g., "Section 5: KPIs Tracked")
+            doc.setFillColor(37, 99, 235);
+            doc.roundedRect(margin, yPosition - 15, contentWidth, 25, 5, 5, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text(headerText, margin + 15, yPosition);
+            yPosition += 30;
+          } else if (headerLevel === 2) {
+            // Subsection headers (e.g., "Interpretation", "Industry Benchmark Comparison")
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(margin + 10, yPosition - 12, contentWidth - 20, 20, 3, 3, 'F');
+            doc.setDrawColor(226, 232, 240);
+            doc.roundedRect(margin + 10, yPosition - 12, contentWidth - 20, 20, 3, 3, 'S');
+            doc.setTextColor(31, 41, 55);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(headerText, margin + 20, yPosition);
+            yPosition += 25;
+          } else {
+            // Level 3+ headers
+            doc.setTextColor(37, 99, 235);
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.text(headerText, margin + 15, yPosition);
+            yPosition += 20;
+          }
           
           doc.setFontSize(11);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(55, 65, 81);
         } else {
-          const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 20);
-          
-          // Check if we need a new page
-          if (yPosition + (lines.length * 14) > pageHeight - margin) {
-            doc.addPage();
-            yPosition = margin + 40;
+          // Handle bold text within paragraphs (e.g., "**Score:** 4")
+          if (paragraph.includes('**')) {
+            const parts = paragraph.split(/(\*\*.*?\*\*)/);
+            let currentX = margin + 15;
+            
+            parts.forEach((part: string) => {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                // Bold text
+                const boldText = part.slice(2, -2);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(37, 99, 235);
+                doc.text(boldText, currentX, yPosition);
+                currentX += doc.getTextWidth(boldText);
+              } else if (part.trim()) {
+                // Regular text
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(55, 65, 81);
+                doc.text(part, currentX, yPosition);
+                currentX += doc.getTextWidth(part);
+              }
+            });
+            yPosition += 16;
+          } else {
+            // Regular paragraph
+            const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 20);
+            
+            // Check if we need a new page
+            if (yPosition + (lines.length * 14) > pageHeight - margin) {
+              doc.addPage();
+              yPosition = margin + 40;
+            }
+            
+            lines.forEach((line: string) => {
+              doc.text(line, margin + 15, yPosition);
+              yPosition += 14;
+            });
           }
-          
-          lines.forEach((line: string) => {
-            doc.text(line, margin + 15, yPosition);
-            yPosition += 14;
-          });
           
           yPosition += 8; // Space between paragraphs
         }
@@ -238,8 +287,8 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       s2: 'Data Foundation',
       s3: 'Human Capital',
       s4: 'Strategic Planning',
-      s5: 'Measurement & Analytics',
-      s6: 'Risk Management',
+      s5: 'KPIs Tracked',
+      s6: 'Security & Compliance',
       s7: 'Organizational Support'
     };
     return sectionNames[key] || key;
