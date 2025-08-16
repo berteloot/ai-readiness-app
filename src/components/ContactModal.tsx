@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { generateAIReadinessPDF, ReportData } from './PDFGenerator';
+import { PDFGenerator, ReportData } from './PDFGenerator';
 
 
 const contactSchema = z.object({
@@ -102,7 +102,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
         max: 0,
         note: ''
       };
-    });
+    };
 
     return {
       company: assessmentData.company || 'Your Company',
@@ -115,32 +115,10 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
     };
   };
 
-  const handlePDFDownload = () => {
-    console.log('PDF download clicked');
-    console.log('Result data:', result);
-    console.log('Assessment data:', assessmentData);
-    
-    const pdfData = transformDataForPDF();
-    console.log('Transformed PDF data:', pdfData);
-    
-    if (pdfData) {
-      try {
-        // Use a simple filename to avoid browser restrictions
-        const filename = 'ai-readiness-report.pdf';
-        generateAIReadinessPDF(pdfData, filename);
-        console.log('PDF generation completed');
-      } catch (error) {
-        console.error('PDF generation failed:', error);
-        // Show user-friendly error message
-        alert('PDF generation failed. Please try again or contact support.');
-      }
-    } else {
-      console.error('Failed to transform data for PDF');
-      alert('Unable to generate PDF. Please ensure all data is available.');
-    }
-  };
-
   if (!isOpen) return null;
+
+  // Transform result data for PDF generation
+  const pdfData = transformDataForPDF();
 
   return (
     <div className="modal-backdrop">
@@ -305,12 +283,14 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
                   Start Over
                 </button>
               )}
-              <button
-                onClick={handlePDFDownload}
-                className="flex-1 btn-primary"
-              >
-                Download PDF
-              </button>
+              {pdfData && (
+                <div className="flex-1">
+                  <PDFGenerator 
+                    data={pdfData} 
+                    filename="ai-readiness-report.pdf"
+                  />
+                </div>
+              )}
             </div>
           </>
         )}
