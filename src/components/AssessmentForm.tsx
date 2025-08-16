@@ -107,8 +107,19 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
     if (isValid) {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
-        // Scroll to top of the form for better UX
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Starting from page 2 (question index 1), scroll to just above the progress bar
+        if (currentQuestion >= 0) { // This will be true for the next question (index 1+)
+          // Use setTimeout to ensure the state update has completed and the new question is rendered
+          setTimeout(() => {
+            const progressBar = document.querySelector('.progress-section');
+            if (progressBar) {
+              const rect = progressBar.getBoundingClientRect();
+              const scrollTop = window.pageYOffset + rect.top - 20; // 20px offset above the progress bar
+              window.scrollTo({ top: scrollTop, behavior: 'smooth' });
+            }
+          }, 100);
+        }
       }
     }
   };
@@ -116,8 +127,16 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   const prevQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      // Scroll to top of the form for better UX
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Scroll to just above the progress bar for better UX
+      setTimeout(() => {
+        const progressBar = document.querySelector('.progress-section');
+        if (progressBar) {
+          const rect = progressBar.getBoundingClientRect();
+          const scrollTop = window.pageYOffset + rect.top - 20; // 20px offset above the progress bar
+          window.scrollTo({ top: scrollTop, behavior: 'smooth' });
+        }
+      }, 100);
     }
   };
 
@@ -267,7 +286,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
         <div className="max-w-4xl mx-auto px-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Progress Bar - Always visible */}
-            <div className="mb-8">
+            <div className="mb-8 progress-section">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-text-secondary">Question {currentQuestion + 1} of {questions.length}</span>
                 <span className="text-sm font-medium text-primary-600">{Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete</span>
