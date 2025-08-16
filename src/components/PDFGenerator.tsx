@@ -42,10 +42,17 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       doc.setFont('helvetica', 'bold');
       doc.text('AI Readiness Assessment Report', pageWidth / 2, 60, { align: 'center' });
       
-      // Company name
+      // Company name with wrapping
       doc.setFontSize(18);
       doc.setFont('helvetica', 'normal');
-      doc.text(company || 'Your Company', pageWidth / 2, 85, { align: 'center' });
+      const companyLines = doc.splitTextToSize(company || 'Your Company', contentWidth - 40);
+      if (Array.isArray(companyLines)) {
+        companyLines.forEach((line, index) => {
+          doc.text(line, pageWidth / 2, 85 + (index * 20), { align: 'center' });
+        });
+      } else {
+        doc.text(companyLines, pageWidth / 2, 85, { align: 'center' });
+      }
       
       // Date
       doc.setFontSize(12);
@@ -93,11 +100,16 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       
       yPosition += 50;
 
-      // Score Breakdown Section
+      // Score Breakdown Section with dynamic height
+      const ordered = ['s1', 's2', 's3', 's4', 's5', 's6', 's7'].filter(k => k in breakdown);
+      const rows = ordered.length;
+      const boxTop = yPosition - 25;
+      const boxHeight = 45 + rows * 18 + 20; // title + header + rows + padding
+      
       doc.setFillColor(255, 255, 255);
       doc.setDrawColor(229, 231, 235);
       doc.setLineWidth(1);
-      doc.roundedRect(margin, yPosition - 25, contentWidth, 140, 8, 8, 'FD');
+      doc.roundedRect(margin, boxTop, contentWidth, boxHeight, 8, 8, 'FD');
       
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
@@ -121,7 +133,8 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       // Breakdown items with alternating row colors
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      Object.entries(breakdown).forEach(([key, value], index) => {
+      ordered.forEach((key, index) => {
+        const value = breakdown[key];
         const sectionName = getSectionName(key);
         const maxSectionScore = getMaxScore(key);
         
@@ -144,6 +157,12 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       });
 
       yPosition += 30;
+
+      // Guard before drawing "Executive Summary"
+      if (yPosition + 80 > pageHeight - margin) {
+        doc.addPage();
+        yPosition = margin + 40;
+      }
 
       // Executive Summary with enhanced styling
       doc.setFillColor(255, 255, 255);
@@ -195,7 +214,7 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             doc.setTextColor(31, 41, 55);
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text(headerText, margin + 20, yPosition);
+            doc.text(headerText, margin + 15, yPosition);
             yPosition += 25;
           } else {
             // Level 3+ headers - NO MORE BLUE
@@ -212,26 +231,7 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
         } else {
           // Handle bold text within paragraphs (e.g., "**Score:** 4")
           if (paragraph.includes('**')) {
-            const parts = paragraph.split(/(\*\*.*?\*\*)/);
-            let currentX = margin + 15;
-            
-            parts.forEach((part: string) => {
-              if (part.startsWith('**') && part.endsWith('**')) {
-                // Bold text - NO MORE BLUE
-                const boldText = part.slice(2, -2);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(31, 41, 55); // Dark gray instead of blue
-                doc.text(boldText, currentX, yPosition);
-                currentX += doc.getTextWidth(boldText);
-              } else if (part.trim()) {
-                // Regular text
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(55, 65, 81);
-                doc.text(part, currentX, yPosition);
-                currentX += doc.getTextWidth(part);
-              }
-            });
-            yPosition += 16;
+            yPosition = drawRichLine(doc, paragraph, margin, contentWidth, pageHeight, yPosition);
           } else {
             // Regular paragraph - ENFORCE MARGINS WITH TEXT WRAPPING
             const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 30); // Reduced width for better margins
@@ -243,18 +243,8 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             }
             
             lines.forEach((line: string) => {
-              // Ensure text doesn't exceed right margin
-              if (doc.getTextWidth(line) > contentWidth - 30) {
-                // If line is still too long, split it further
-                const subLines = doc.splitTextToSize(line, contentWidth - 30);
-                subLines.forEach((subLine: string) => {
-                  doc.text(subLine, margin + 15, yPosition);
-                  yPosition += 14;
-                });
-              } else {
-                doc.text(line, margin + 15, yPosition);
-                yPosition += 14;
-              }
+              doc.text(line, margin + 15, yPosition);
+              yPosition += 14;
             });
           }
           
@@ -262,16 +252,20 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
         }
       });
 
-      // Footer
-      const footerY = pageHeight - 40;
-      doc.setDrawColor(229, 231, 235);
-      doc.line(margin, footerY, pageWidth - margin, footerY);
-      
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(156, 163, 175);
-      doc.text('Generated by Lean Solutions Group', pageWidth / 2, footerY + 15, { align: 'center' });
-      doc.text('AI Readiness Assessment Tool', pageWidth / 2, footerY + 28, { align: 'center' });
+      // Draw footer on every page
+      const pages = doc.getNumberOfPages();
+      for (let i = 1; i <= pages; i++) {
+        doc.setPage(i);
+        const footerY = pageHeight - 40;
+        doc.setDrawColor(229, 231, 235);
+        doc.line(margin, footerY, pageWidth - margin, footerY);
+        
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(156, 163, 175);
+        doc.text('Generated by Lean Solutions Group', pageWidth / 2, footerY + 15, { align: 'center' });
+        doc.text(`AI Readiness Assessment Tool  •  ${i}/${pages}`, pageWidth / 2, footerY + 28, { align: 'center' });
+      }
 
       // Set document properties
       doc.setProperties({
@@ -289,6 +283,35 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       console.error('PDF generation error:', error);
       alert('Error generating PDF. Please try again.');
     }
+  };
+
+  // Helper function to draw rich text with proper wrapping and page breaks
+  const drawRichLine = (doc: jsPDF, str: string, margin: number, contentWidth: number, pageHeight: number, yPos: number) => {
+    const tokens = str.split(/(\*\*.*?\*\*)/).filter(Boolean);
+    let x = margin + 15;
+    let currentY = yPos;
+
+    tokens.forEach((tok: string) => {
+      const bold = tok.startsWith('**') && tok.endsWith('**');
+      const text = bold ? tok.slice(2, -2) : tok;
+      
+      for (const word of (text + ' ').split(' ')) {
+        const w = doc.getTextWidth(word + ' ');
+        if (x + w > margin + contentWidth - 15) {
+          currentY += 14; 
+          x = margin + 15;
+          if (currentY > pageHeight - margin) { 
+            doc.addPage(); 
+            currentY = margin + 40; 
+          }
+        }
+        doc.setFont('helvetica', bold ? 'bold' : 'normal');
+        doc.setTextColor(bold ? 31 : 55, bold ? 41 : 65, bold ? 55 : 81);
+        doc.text(word + ' ', x, currentY);
+        x += w;
+      }
+    });
+    return currentY + 16;
   };
 
   const getSectionName = (key: string): string => {
