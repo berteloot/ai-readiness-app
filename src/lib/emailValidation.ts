@@ -52,6 +52,9 @@ export function validateBusinessEmail(email: string): EmailValidationResult {
     };
   }
 
+  // Debug logging
+  console.log('Validating email:', email);
+
   const trimmedEmail = email.trim().toLowerCase();
   
   // Basic email format validation
@@ -74,6 +77,9 @@ export function validateBusinessEmail(email: string): EmailValidationResult {
   }
   
   const [, domain] = parts;
+  console.log('Domain extracted:', domain);
+  console.log('Is personal domain?', PERSONAL_DOMAINS.has(domain));
+  console.log('Is disposable domain?', DISPOSABLE_DOMAINS.has(domain));
   
   // Check for disposable domains
   if (DISPOSABLE_DOMAINS.has(domain)) {
@@ -117,7 +123,8 @@ export function validateBusinessEmail(email: string): EmailValidationResult {
     };
   }
 
-  // Default: assume business email if it passes all other checks
+  // If it's not a personal domain and not disposable, it's likely a business email
+  // This catches legitimate company domains like nytromarketing.com, acme.com, etc.
   return {
     isValid: true,
     isBusiness: true
