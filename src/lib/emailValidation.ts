@@ -52,8 +52,7 @@ export function validateBusinessEmail(email: string): EmailValidationResult {
     };
   }
 
-  // Debug logging
-  console.log('Validating email:', email);
+
 
   const trimmedEmail = email.trim().toLowerCase();
   
@@ -77,9 +76,6 @@ export function validateBusinessEmail(email: string): EmailValidationResult {
   }
   
   const [, domain] = parts;
-  console.log('Domain extracted:', domain);
-  console.log('Is personal domain?', PERSONAL_DOMAINS.has(domain));
-  console.log('Is disposable domain?', DISPOSABLE_DOMAINS.has(domain));
   
   // Check for disposable domains
   if (DISPOSABLE_DOMAINS.has(domain)) {

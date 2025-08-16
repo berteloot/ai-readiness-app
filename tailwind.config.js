@@ -68,21 +68,7 @@ module.exports = {
           default: '#dfe5ef',
           strong: '#c8d1e0',
         },
-        // Legacy accent colors for backward compatibility
-        accent: {
-          50: '#f0f0ff',
-          100: '#e6e6ff',
-          200: '#d1d1ff',
-          300: '#b3b3ff',
-          400: '#8f8fff',
-          500: '#5c5bfe',
-          600: '#4a49e8',
-          700: '#3d3cd1',
-          800: '#3332a8',
-          900: '#2e2d85',
-        },
-        background: 'var(--background-primary)',
-        foreground: 'var(--text-primary)',
+
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
