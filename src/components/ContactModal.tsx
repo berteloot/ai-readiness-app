@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { PDFGenerator, ReportData } from './PDFGenerator';
+
 
 
 const contactSchema = z.object({
@@ -68,57 +68,11 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
 
   const watchedValues = watch();
 
-  // Transform result data for PDF generation
-  const transformDataForPDF = (): ReportData | null => {
-    if (!result || !assessmentData) return null;
 
-    // Map section keys to meaningful labels and max scores
-    const sectionMapping: Record<string, { label: string; max: number; title: string }> = {
-      s1: { label: "Current Tools in Use", max: 8, title: "Current Automation Level" },
-      s2: { label: "Data Maturity", max: 4, title: "Data Infrastructure Maturity" },
-      s3: { label: "Workforce Readiness", max: 4, title: "Workforce AI Adoption Readiness" },
-      s4: { label: "Operational Scalability", max: 4, title: "Scalability of CX Operations" },
-      s5: { label: "KPI Tracking", max: 5, title: "KPI Tracking Sophistication" },
-      s6: { label: "Security & Compliance", max: 6, title: "Security & Compliance" },
-      s7: { label: "Executive Support", max: 4, title: "Budget & Executive Buy-In" }
-    };
-
-    // Create score items from the breakdown
-    const scoreItems = Object.entries(result.breakdown).map(([key, score]) => {
-      const section = sectionMapping[key];
-      if (section) {
-        return {
-          key: key,
-          label: section.label,
-          score: score,
-          max: section.max,
-          note: section.title
-        };
-      }
-      return {
-        key: key,
-        label: key,
-        score: score,
-        max: 0,
-        note: ''
-      };
-    });
-
-    return {
-      company: assessmentData.company || 'Your Company',
-      dateISO: new Date().toISOString(),
-      score: result.score,
-      maxScore: result.maxScore,
-      summary: result.aiReport || 'No AI analysis available.',
-      items: scoreItems,
-      orderedKeys: Object.keys(result.breakdown)
-    };
-  };
 
   if (!isOpen) return null;
 
-  // Transform result data for PDF generation
-  const pdfData = transformDataForPDF();
+
 
   return (
     <div className="modal-backdrop">
@@ -283,14 +237,34 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
                   Start Over
                 </button>
               )}
-              {pdfData && (
-                <div className="flex-1">
-                  <PDFGenerator 
-                    data={pdfData} 
-                    filename="ai-readiness-report.pdf"
-                  />
-                </div>
-              )}
+              <button
+                onClick={() => {
+                  // Simple PDF download using the existing PDFGenerator function
+                  const { generateAIReadinessPDF } = require('./PDFGenerator');
+                  const reportData = {
+                    company: assessmentData?.company || 'Your Company',
+                    dateISO: new Date().toISOString(),
+                    score: result.score,
+                    maxScore: result.maxScore,
+                    summary: result.aiReport || 'No AI analysis available.',
+                    items: Object.entries(result.breakdown).map(([key, score]) => ({
+                      key,
+                      label: key,
+                      score: score as number,
+                      max: 0,
+                      note: ''
+                    })),
+                    orderedKeys: Object.keys(result.breakdown)
+                  };
+                  generateAIReadinessPDF(reportData, 'ai-readiness-report.pdf');
+                }}
+                className="flex-1 btn-primary"
+              >
+                <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF Report
+              </button>
             </div>
           </>
         )}
