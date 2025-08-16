@@ -157,7 +157,7 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
       doc.text('Executive Summary', margin + 25, yPosition);
       yPosition += 35;
 
-      // AI Report content with improved formatting
+      // AI Report content with improved formatting and proper margins
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(55, 65, 81);
@@ -176,10 +176,10 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             yPosition = margin + 40;
           }
           
-          // Different styling for different header levels
+          // Different styling for different header levels - REDUCED BLUE USAGE
           if (headerLevel === 1) {
             // Main section headers (e.g., "Section 5: KPIs Tracked")
-            doc.setFillColor(37, 99, 235);
+            doc.setFillColor(55, 65, 81); // Dark gray instead of blue
             doc.roundedRect(margin, yPosition - 15, contentWidth, 25, 5, 5, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
@@ -198,8 +198,8 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             doc.text(headerText, margin + 20, yPosition);
             yPosition += 25;
           } else {
-            // Level 3+ headers
-            doc.setTextColor(37, 99, 235);
+            // Level 3+ headers - NO MORE BLUE
+            doc.setTextColor(55, 65, 81); // Dark gray instead of blue
             doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
             doc.text(headerText, margin + 15, yPosition);
@@ -217,10 +217,10 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             
             parts.forEach((part: string) => {
               if (part.startsWith('**') && part.endsWith('**')) {
-                // Bold text
+                // Bold text - NO MORE BLUE
                 const boldText = part.slice(2, -2);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(37, 99, 235);
+                doc.setTextColor(31, 41, 55); // Dark gray instead of blue
                 doc.text(boldText, currentX, yPosition);
                 currentX += doc.getTextWidth(boldText);
               } else if (part.trim()) {
@@ -233,8 +233,8 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             });
             yPosition += 16;
           } else {
-            // Regular paragraph
-            const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 20);
+            // Regular paragraph - ENFORCE MARGINS WITH TEXT WRAPPING
+            const lines = doc.splitTextToSize(paragraph.trim(), contentWidth - 30); // Reduced width for better margins
             
             // Check if we need a new page
             if (yPosition + (lines.length * 14) > pageHeight - margin) {
@@ -243,8 +243,18 @@ export default function PDFGenerator({ result, aiReport, company }: PDFGenerator
             }
             
             lines.forEach((line: string) => {
-              doc.text(line, margin + 15, yPosition);
-              yPosition += 14;
+              // Ensure text doesn't exceed right margin
+              if (doc.getTextWidth(line) > contentWidth - 30) {
+                // If line is still too long, split it further
+                const subLines = doc.splitTextToSize(line, contentWidth - 30);
+                subLines.forEach((subLine: string) => {
+                  doc.text(subLine, margin + 15, yPosition);
+                  yPosition += 14;
+                });
+              } else {
+                doc.text(line, margin + 15, yPosition);
+                yPosition += 14;
+              }
             });
           }
           
