@@ -1,85 +1,154 @@
+// scoring.ts
+
 export type Answers = {
-  q1: string[]; // Section 1 multi - Current Automation Level (2 points each, max 8)
-  q2: string;   // Section 2 single - Data Infrastructure Maturity (0-4 points)
-  q3: string;   // Section 3 single - Workforce AI Adoption Readiness (0-4 points)
-  q4: string;   // Section 4 single - Scalability of CX Operations (0-4 points)
-  q5: string[]; // Section 5 multi - KPI Tracking Sophistication (1 point each, max 5)
-  q6: string[]; // Section 6 multi - Security & Compliance (2 points each, max 6)
-  q7: string;   // Section 7 single - Budget & Executive Buy-In (0-4 points)
-  q8: string[]; // Section 8 multi - Pain Points (non-scored, max 3 selections)
-  q9: string;   // Section 9 single - Urgency Assessment (non-scored)
-  // Total maximum score: 8 + 4 + 4 + 4 + 5 + 6 + 4 = 35 points
+  q1?: string[];
+  q2?: string;
+  q3?: string;
+  q4?: string;
+  q5?: string[];
+  q6?: string[];
+  q7?: string;
+  q8?: string[];
+  q9?: string;
+  sector?: string;
+  region?: string;
 };
 
-export type ScoreResult = { 
-  score: number; 
-  tier: "AI-Enhanced" | "Getting Started" | "Not Ready Yet"; 
-  breakdown: Record<string, number>;
+export type ScoreResult = {
+  score: number;
+  overallPct: number; // 0..100, rounded
+  tier: "AI-Enhanced" | "Getting Started" | "Not Ready Yet";
+
+  breakdown: Record<"s1" | "s2" | "s3" | "s4" | "s5" | "s6" | "s7", number>;
+  breakdownMax: Record<"s1" | "s2" | "s3" | "s4" | "s5" | "s6" | "s7", number>;
+  breakdownPct: Record<"s1" | "s2" | "s3" | "s4" | "s5" | "s6" | "s7", number>; // 0..100, rounded
+
   maxScore: number;
+  notes?: {
+    tierAdjustedDueToLowDataMaturity?: boolean;
+  };
 };
+
+function norm(val?: string) {
+  return (val || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function uniq<T>(arr?: T[]): T[] {
+  return Array.from(new Set(arr || []));
+}
+
+function pct(part: number, max: number) {
+  if (max <= 0) return 0;
+  return Math.round((part / max) * 100);
+}
 
 export function scoreAnswers(a: Answers): ScoreResult {
-  // Section 1 – Q1: Current Automation Level (2 points each, max 8)
-  const q1Set = new Set(a.q1);
-  const q1Count = [
-    "chatbots",
-    "rpa", 
-    "ai_assistants",
-    "qa_analytics",
-  ].reduce((acc, key) => acc + (q1Set.has(key) ? 1 : 0), 0);
-  const s1 = Math.min(q1Count * 2, 8);
+  const maxes = { s1: 8, s2: 4, s3: 4, s4: 4, s5: 5, s6: 6, s7: 4 } as const;
 
-  // Section 2 – Q2: Data Infrastructure Maturity (0-4 points)
+  // S1 Current Automation Level
+  const q1Set = new Set(uniq(a.q1).map(norm));
+  const s1Keys = ["chatbots", "rpa", "ai_assistants", "qa_analytics"];
+  const s1Raw = s1Keys.reduce((acc, key) => acc + (q1Set.has(key) ? 1 : 0), 0);
+  const s1 = Math.min(s1Raw * 2, maxes.s1);
+
+  // S2 Data Infrastructure
   const mapQ2: Record<string, number> = {
     fully_integrated: 4,
     crm_dashboards: 2,
     separate_systems: 1,
     no_centralized: 0,
   };
-  const s2 = mapQ2[a.q2] ?? 0;
+  const s2 = mapQ2[norm(a.q2)] ?? 0;
 
-  // Section 3 – Q3: Workforce AI Adoption Readiness (0-4 points)
+  // S3 Workforce Readiness
   const mapQ3: Record<string, number> = {
     fully_trained: 4,
     some_trained: 2,
     no_training_open: 1,
     resistant: 0,
   };
-  const s3 = mapQ3[a.q3] ?? 0;
+  const s3 = mapQ3[norm(a.q3)] ?? 0;
 
-  // Section 4 – Q4: Scalability of CX Operations (0-4 points)
+  // S4 Scalability
   const mapQ4: Record<string, number> = {
     full_scalable: 4,
     extended_multi: 2,
     limited_scaling: 1,
     no_scalability: 0,
   };
-  const s4 = mapQ4[a.q4] ?? 0;
+  const s4 = mapQ4[norm(a.q4)] ?? 0;
 
-  // Section 5 – Q5: KPI Tracking Sophistication (1 point each, max 5)
-  const s5 = Math.min(a.q5.filter(q => q !== 'none').length, 5);
+  // S5 KPI Tracking
+  const s5 = Math.min(
+    uniq(a.q5).map(norm).filter((x) => x && x !== "none").length,
+    maxes.s5
+  );
 
-  // Section 6 – Q6: Security & Compliance (2 points each, max 6)
-  const s6 = Math.min(a.q6.filter(q => q !== 'none').length * 2, 6);
+  // S6 Security and Compliance
+  const s6 = Math.min(
+    uniq(a.q6).map(norm).filter((x) => x && x !== "none").length * 2,
+    maxes.s6
+  );
 
-  // Section 7 – Q7: Budget & Executive Buy-In (0-4 points)
+  // S7 Budget and Executive Buy-in
   const mapQ7: Record<string, number> = {
     dedicated_budget: 4,
+    pilot_budget: 3,
     interest_no_budget: 2,
     limited_engagement: 0,
   };
-  const s7 = mapQ7[a.q7] ?? 0;
+  const s7 = mapQ7[norm(a.q7)] ?? 0;
 
-  const score = s1 + s2 + s3 + s4 + s5 + s6 + s7; // max 35
-  const maxScore = 35;
-  
-  // Tier classification based on LSG questionnaire
-  const tier = score >= 25 ? "AI-Enhanced" : score >= 15 ? "Getting Started" : "Not Ready Yet";
-  
-  return { 
-    score, 
-    tier, 
-    breakdown: { s1, s2, s3, s4, s5, s6, s7 },
-    maxScore
+  // Totals and percentages
+  const score = s1 + s2 + s3 + s4 + s5 + s6 + s7;
+  const maxScore = Object.values(maxes).reduce((a, b) => a + b, 0); // 35
+  const overallPct = pct(score, maxScore);
+
+  const breakdown = { s1, s2, s3, s4, s5, s6, s7 };
+  const breakdownMax = {
+    s1: maxes.s1,
+    s2: maxes.s2,
+    s3: maxes.s3,
+    s4: maxes.s4,
+    s5: maxes.s5,
+    s6: maxes.s6,
+    s7: maxes.s7,
+  };
+  const breakdownPct = {
+    s1: pct(s1, maxes.s1),
+    s2: pct(s2, maxes.s2),
+    s3: pct(s3, maxes.s3),
+    s4: pct(s4, maxes.s4),
+    s5: pct(s5, maxes.s5),
+    s6: pct(s6, maxes.s6),
+    s7: pct(s7, maxes.s7),
+  };
+
+  // Tier plus data maturity gate
+  let tentativeTier: ScoreResult["tier"];
+  if (score >= 25) tentativeTier = "AI-Enhanced";
+  else if (score >= 15) tentativeTier = "Getting Started";
+  else tentativeTier = "Not Ready Yet";
+
+  let tier = tentativeTier;
+  const notes: ScoreResult["notes"] = {};
+  if (tentativeTier === "AI-Enhanced" && s2 <= 1) {
+    tier = "Getting Started";
+    notes.tierAdjustedDueToLowDataMaturity = true;
+  }
+
+  return {
+    score,
+    overallPct,
+    tier,
+    breakdown,
+    breakdownMax,
+    breakdownPct,
+    maxScore,
+    notes,
   };
 }
