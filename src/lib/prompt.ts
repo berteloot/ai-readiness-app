@@ -40,6 +40,10 @@ Critical Rule:
   • Approved domains: mckinsey.com, gartner.com, deloitte.com, pwc.com, accenture.com, forrester.com, weforum.org, oecd.org, technologyreview.com, hbr.org, aiindex.stanford.edu (or equivalent).
   • Cite with domain names only. No full URLs.
   • Do not write generic claims like "studies show" without a citation.
+	• If no stat from approved domains (2023+), insert “[no reliable 2023+ benchmark found]” instead of fabricating or using outside sources.
+  • Sector/region-specific data is preferred; if missing, explicitly state its absence.
+  • No two consecutive sections may start with the same subject phrase; vary sentence openings.
+  • Confidence Meter must include a one-line reason (e.g., “Low — limited workforce data provided”).
 
 Style & Evidence Rules:
   • For each section, write one short narrative paragraph, 3–5 sentences, following Insight → Evidence → Implication.
