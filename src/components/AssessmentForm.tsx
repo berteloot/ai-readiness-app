@@ -5,8 +5,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { questions } from '@/data/questions';
+import { enforceNoneExclusive } from '@/lib/selection';
 
+/* If your questions.ts includes sector and region, keep these in the schema.
+   If not, remove sector and region from the schema and defaultValues. */
 const formSchema = z.object({
+  sector: z.string().optional(),
+  region: z.string().optional(),
+
   q1: z.array(z.string()).min(1, 'Please select at least one option'),
   q2: z.string().min(1, 'Please select an option'),
   q3: z.string().min(1, 'Please select an option'),
@@ -38,19 +44,29 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      sector: undefined,
+      region: undefined,
+
       q1: [],
+      q2: '',
+      q3: '',
+      q4: '',
       q5: [],
       q6: [],
+      q7: '',
       q8: [],
+      q9: '',
     },
   });
 
   const watchedValues = watch();
 
-  // Reset form and go to first question when component mounts or resets
   useEffect(() => {
     setCurrentQuestion(0);
     reset({
+      sector: undefined,
+      region: undefined,
+
       q1: [],
       q2: '',
       q3: '',
@@ -63,81 +79,88 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
     });
   }, [reset]);
 
-  const handleMultiSelect = (questionId: keyof FormData, value: string, maxSelections?: number) => {
-    const currentValues = watchedValues[questionId] as string[] || [];
-    
-    // Clean, accessible multi-select with exclusive "None of the above"
+  // Multi-select with “None” exclusivity and optional maxSelections
+  const handleMultiSelect = (
+    questionId: keyof FormData,
+    value: string,
+    maxSelections?: number
+  ) => {
+    const currentValues = (watchedValues[questionId] as string[]) || [];
+
     if (value === 'none') {
-      // Selecting None clears others; deselecting None leaves all off
+      // Selecting None clears others; deselecting None leaves empty
       if (currentValues.includes('none')) {
-        setValue(questionId, []);
+        setValue(questionId, [] as any);
       } else {
-        setValue(questionId, ['none']);
+        setValue(questionId, ['none'] as any);
       }
       return;
     }
-    
+
     // Selecting any real option deselects None
-    const base = currentValues.filter(x => x !== 'none');
+    const base = currentValues.filter((x) => x !== 'none');
+
     if (currentValues.includes(value)) {
       // Deselect option
-      const newValues = base.filter(x => x !== value);
-      setValue(questionId, newValues);
+      const newValues = base.filter((x) => x !== value);
+      setValue(questionId, newValues as any);
     } else {
       // Select option
       let newValues = [...base, value];
-      
+
       if (maxSelections && newValues.length > maxSelections) {
-        // Remove oldest selection (FIFO)
+        // Keep most recent selections within the cap
         newValues = newValues.slice(-maxSelections);
       }
-      
-      setValue(questionId, newValues);
+
+      setValue(questionId, newValues as any);
     }
   };
 
   const handleSingleSelect = (questionId: keyof FormData, value: string) => {
-    setValue(questionId, value);
+    setValue(questionId, value as any);
   };
 
   const nextQuestion = async () => {
     const questionId = questions[currentQuestion].id as keyof FormData;
     const isValid = await trigger(questionId);
-    
-    if (isValid) {
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
-        
-        // Starting from page 2 (question index 1), scroll to just above the progress bar
-        if (currentQuestion >= 0) { // This will be true for the next question (index 1+)
-          // Use setTimeout to ensure the state update has completed and the new question is rendered
-          setTimeout(() => {
-            const progressBar = document.querySelector('.progress-section');
-            if (progressBar) {
-              const rect = progressBar.getBoundingClientRect();
-              const scrollTop = window.pageYOffset + rect.top - 20; // 20px offset above the progress bar
-              window.scrollTo({ top: scrollTop, behavior: 'smooth' });
-            }
-          }, 100);
+    if (isValid && currentQuestion < questions.length - 1) {
+      setCurrentQuestion((n) => n + 1);
+      setTimeout(() => {
+        const progressBar = document.querySelector('.progress-section');
+        if (progressBar) {
+          const rect = progressBar.getBoundingClientRect();
+          const scrollTop = window.pageYOffset + rect.top - 20;
+          window.scrollTo({ top: scrollTop, behavior: 'smooth' });
         }
-      }
+      }, 100);
     }
   };
 
   const prevQuestion = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-      
-      // Scroll to just above the progress bar for better UX
+      setCurrentQuestion((n) => n - 1);
       setTimeout(() => {
         const progressBar = document.querySelector('.progress-section');
         if (progressBar) {
           const rect = progressBar.getBoundingClientRect();
-          const scrollTop = window.pageYOffset + rect.top - 20; // 20px offset above the progress bar
+          const scrollTop = window.pageYOffset + rect.top - 20;
           window.scrollTo({ top: scrollTop, behavior: 'smooth' });
         }
       }, 100);
     }
+  };
+
+  // Final submit handler: clean multi-selects so “none” is exclusive
+  const onSubmitClean = (raw: FormData) => {
+    const cleaned: FormData = {
+      ...raw,
+      q1: enforceNoneExclusive(raw.q1 || []),
+      q5: enforceNoneExclusive(raw.q5 || []),
+      q6: enforceNoneExclusive(raw.q6 || []),
+      q8: enforceNoneExclusive(raw.q8 || []),
+    };
+    onSubmit(cleaned);
   };
 
   const renderQuestion = (question: any) => {
@@ -157,17 +180,16 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
             </div>
             <div className="grid gap-4">
               {question.options.map((option: any) => {
-                const isSelected = Array.isArray(currentValue) && currentValue.includes(option.value);
-                
+                const isSelected =
+                  Array.isArray(currentValue) && currentValue.includes(option.value);
+
                 return (
-                  <label 
-                    key={option.value} 
+                  <label
+                    key={option.value}
                     className={`
                       relative block p-6 rounded-md border-2 transition-all duration-200 cursor-pointer
-                      ${isSelected 
-                        ? 'border-primary-500 bg-primary-50 shadow-card' 
-                        : 'border-border-default hover:border-primary-300 hover:shadow-card'
-                      }
+                      ${isSelected ? 'border-primary-500 bg-primary-50 shadow-card'
+                                   : 'border-border-default hover:border-primary-300 hover:shadow-card'}
                     `}
                   >
                     <input
@@ -175,25 +197,41 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                       name={question.id}
                       className="sr-only"
                       checked={isSelected}
-                      onChange={() => handleMultiSelect(question.id as keyof FormData, option.value, question.maxSelections)}
+                      onChange={() =>
+                        handleMultiSelect(
+                          question.id as keyof FormData,
+                          option.value,
+                          question.maxSelections
+                        )
+                      }
                     />
                     <div className="flex items-start space-x-4">
-                      <div className={`
-                        flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center
-                        ${isSelected 
-                          ? 'border-primary-500 bg-primary-500' 
-                          : 'border-border-default'
-                        }
-                      `}>
+                      <div
+                        className={`
+                          flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center
+                          ${isSelected ? 'border-primary-500 bg-primary-500'
+                                       : 'border-border-default'}
+                        `}
+                      >
                         {isSelected && (
                           <svg className="w-4 h-4 text-text-onPrimary" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         )}
                       </div>
                       <div className="flex-1">
-                        <div className="font-semibold text-text-primary text-lg mb-2">{option.label}</div>
-                        <div className="text-text-secondary text-base leading-relaxed">{option.description}</div>
+                        <div className="font-semibold text-text-primary text-lg mb-2">
+                          {option.label}
+                        </div>
+                        {option.description && (
+                          <div className="text-text-secondary text-base leading-relaxed">
+                            {option.description}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </label>
@@ -217,16 +255,14 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
             <div className="grid gap-4">
               {question.options.map((option: any) => {
                 const isSelected = currentValue === option.value;
-                
+
                 return (
-                  <label 
-                    key={option.value} 
+                  <label
+                    key={option.value}
                     className={`
                       relative block p-6 rounded-md border-2 transition-all duration-200 cursor-pointer
-                      ${isSelected 
-                        ? 'border-accent-500 bg-accent-50 shadow-card' 
-                        : 'border-border-default hover:border-accent-300 hover:shadow-card'
-                      }
+                      ${isSelected ? 'border-accent-500 bg-accent-50 shadow-card'
+                                   : 'border-border-default hover:border-accent-300 hover:shadow-card'}
                     `}
                   >
                     <input
@@ -237,20 +273,24 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                       onChange={() => handleSingleSelect(question.id as keyof FormData, option.value)}
                     />
                     <div className="flex items-start space-x-4">
-                      <div className={`
-                        flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
-                        ${isSelected 
-                          ? 'border-accent-500 bg-accent-500' 
-                          : 'border-border-default'
-                        }
-                      `}>
-                        {isSelected && (
-                          <div className="w-3 h-3 bg-text-onAccent rounded-full"></div>
-                        )}
+                      <div
+                        className={`
+                          flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
+                          ${isSelected ? 'border-accent-500 bg-accent-500'
+                                       : 'border-border-default'}
+                        `}
+                      >
+                        {isSelected && <div className="w-3 h-3 bg-text-onAccent rounded-full" />}
                       </div>
                       <div className="flex-1">
-                        <div className="font-semibold text-text-primary text-lg mb-2">{option.label}</div>
-                        <div className="text-text-secondary text-base leading-relaxed">{option.description}</div>
+                        <div className="font-semibold text-text-primary text-lg mb-2">
+                          {option.label}
+                        </div>
+                        {option.description && (
+                          <div className="text-text-secondary text-base leading-relaxed">
+                            {option.description}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </label>
@@ -268,34 +308,34 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   const currentQ = questions[currentQuestion];
   const isLastQuestion = currentQuestion === questions.length - 1;
   const isFirstQuestion = currentQuestion === 0;
-  
+
   const canProceed = () => {
-    const currentQ = questions[currentQuestion];
-    const currentValue = watchedValues[currentQ.id as keyof FormData];
-    
-    if (currentQ.type === 'multi') {
-      return Array.isArray(currentValue) && currentValue.length > 0;
-    }
-    
-    return currentValue && currentValue !== '';
+    const q = questions[currentQuestion];
+    const val = watchedValues[q.id as keyof FormData];
+    if (q.type === 'multi') return Array.isArray(val) && val.length > 0;
+    return Boolean(val);
   };
 
   return (
     <div className="min-h-screen bg-background-surface">
       <div className="pt-12 pb-16">
         <div className="max-w-4xl mx-auto px-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Progress Bar - Always visible */}
+          <form onSubmit={handleSubmit(onSubmitClean)} className="space-y-8">
+            {/* Progress Bar */}
             <div className="mb-8 progress-section">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-text-secondary">Question {currentQuestion + 1} of {questions.length}</span>
-                <span className="text-sm font-medium text-primary-600">{Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete</span>
+                <span className="text-sm font-medium text-text-secondary">
+                  Question {currentQuestion + 1} of {questions.length}
+                </span>
+                <span className="text-sm font-medium text-primary-600">
+                  {Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete
+                </span>
               </div>
               <div className="w-full bg-neutral-200 rounded-full h-2">
-                <div 
+                <div
                   className="primary-gradient h-2 rounded-full transition-all duration-300 ease-out"
                   style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
-                ></div>
+                />
               </div>
             </div>
 
@@ -310,9 +350,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                 </p>
               </div>
 
-              <div className="mb-8">
-                {renderQuestion(currentQ)}
-              </div>
+              <div className="mb-8">{renderQuestion(currentQ)}</div>
 
               {/* Error Display */}
               {errors[currentQ.id as keyof FormData] && (
@@ -320,12 +358,16 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                   <div className="flex items-start p-4 bg-error/10 border border-error/20 rounded-md">
                     <div className="flex-shrink-0">
                       <svg className="h-6 w-6 text-error" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
                     <div className="ml-3">
                       <p className="text-sm text-error">
-                        {errors[currentQ.id as keyof FormData]?.message}
+                        {errors[currentQ.id as keyof FormData]?.message as any}
                       </p>
                     </div>
                   </div>
@@ -360,9 +402,18 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                   >
                     {isLoading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-text-onPrimary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-text-onPrimary"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                         Generating Report...
                       </span>
