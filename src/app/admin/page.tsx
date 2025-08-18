@@ -36,6 +36,7 @@ interface Submission {
 }
 
 export default function AdminPage() {
+  // Initialize all state variables
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authToken, setAuthToken] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [isValidatingToken, setIsValidatingToken] = useState(true); // Add loading state for token validation
 
   const [isDeletingUsers, setIsDeletingUsers] = useState(false);
   const [error, setError] = useState('');
@@ -51,16 +53,52 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'submissions' | 'users'>('submissions');
   const router = useRouter();
 
+  // CRITICAL SECURITY: Prevent any API calls or data fetching until properly authenticated
+  const isFullyAuthenticated = isAuthenticated && authToken && !isValidatingToken;
+
   useEffect(() => {
     // Check if already authenticated
     const token = localStorage.getItem('adminToken');
     if (token) {
-      setAuthToken(token);
-      setIsAuthenticated(true);
-      fetchSubmissions(token);
-      fetchUsers(token);
+      // Validate token before setting as authenticated
+      validateTokenAndSetAuth(token);
+    } else {
+      // No token found, set validation complete
+      setIsValidatingToken(false);
     }
   }, []);
+
+  const validateTokenAndSetAuth = async (token: string) => {
+    try {
+      // Test the token by making a simple API call
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        // Token is valid, set authentication state
+        setAuthToken(token);
+        setIsAuthenticated(true);
+        // Now fetch data with valid token
+        fetchSubmissions(token);
+        fetchUsers(token);
+      } else {
+        // Token is invalid, remove it
+        localStorage.removeItem('adminToken');
+        setAuthToken(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      // Network error or other issue, remove invalid token
+      localStorage.removeItem('adminToken');
+      setAuthToken(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsValidatingToken(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +137,12 @@ export default function AdminPage() {
   };
 
   const fetchSubmissions = async (token?: string) => {
+    // CRITICAL SECURITY: Prevent API calls without proper authentication
+    if (!isFullyAuthenticated) {
+      console.error('Security violation: Attempted to fetch submissions without authentication');
+      return;
+    }
+    
     const currentToken = token || authToken;
     if (!currentToken) return;
     
@@ -108,7 +152,7 @@ export default function AdminPage() {
       console.log('Fetching submissions...');
       const response = await fetch('/api/admin/submissions', {
         headers: {
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${currentToken}`
         }
       });
       console.log('Submissions API response status:', response.status);
@@ -138,6 +182,12 @@ export default function AdminPage() {
   };
 
   const fetchUsers = async (token?: string) => {
+    // CRITICAL SECURITY: Prevent API calls without proper authentication
+    if (!isFullyAuthenticated) {
+      console.error('Security violation: Attempted to fetch users without authentication');
+      return;
+    }
+    
     const currentToken = token || authToken;
     if (!currentToken) return;
     
@@ -213,6 +263,12 @@ export default function AdminPage() {
   };
 
   const deleteSelectedUsers = async () => {
+    // CRITICAL SECURITY: Prevent destructive operations without proper authentication
+    if (!isFullyAuthenticated) {
+      console.error('Security violation: Attempted to delete users without authentication');
+      return;
+    }
+    
     if (selectedUsers.size === 0) return;
     
     // Get details about what will be deleted
@@ -337,7 +393,23 @@ This action cannot be undone.`;
     window.URL.revokeObjectURL(url);
   };
 
-  if (!isAuthenticated) {
+  // Show loading state while validating token
+  if (isValidatingToken) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-900">Validating session...</h2>
+            <p className="text-sm text-gray-600">Please wait while we verify your access</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Prevent any rendering or API calls until authenticated
+  if (!isAuthenticated || !authToken) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
@@ -384,6 +456,11 @@ This action cannot be undone.`;
         </div>
       </div>
     );
+  }
+
+  // CRITICAL SECURITY: Only render admin content when fully authenticated
+  if (!isFullyAuthenticated) {
+    return null; // This should never happen due to the earlier checks, but extra safety
   }
 
   return (
