@@ -5,12 +5,33 @@ export function buildReportPrompt(score: ScoreResult, answers: Answers) {
   const joinOrNone = (arr?: string[]) =>
     Array.isArray(arr) && arr.length ? arr.join(", ") : "none";
 
+  // Pretty labels for sector/region values
+  const sectorLabelMap: Record<string, string> = {
+    retail: "Retail",
+    financial_services: "Financial Services",
+    telecom: "Telecom",
+    bpo: "BPO / Outsourcing",
+    healthcare: "Healthcare",
+    manufacturing: "Manufacturing",
+    logistics: "Logistics / Transportation",
+    other: "Other",
+  };
+  const regionLabelMap: Record<string, string> = {
+    na: "North America",
+    emea: "EMEA",
+    apac: "APAC",
+    latam: "LATAM",
+    global: "Global / Mixed",
+  };
+  const sectorLabel = answers.sector ? (sectorLabelMap[answers.sector] || answers.sector) : "not specified";
+  const regionLabel = answers.region ? (regionLabelMap[answers.region] || answers.region) : "not specified";
+
   const painPoints =
     Array.isArray(answers.q8) && answers.q8.length ? answers.q8.join(", ") : "not specified";
 
   const urgency = answers.q9 || "not specified";
 
-  // Derive high/low sections using the aligned labels from scoring.ts
+  // High / Low sections via aligned labels from scoring.ts
   const highSections =
     score.sections
       .filter(s => s.pct >= 75)
@@ -23,7 +44,7 @@ export function buildReportPrompt(score: ScoreResult, answers: Answers) {
       .map(s => `${s.label} ${s.score}/${s.max} (${s.pct}%)`)
       .join("; ") || "none";
 
-  // Render a breakdown list using aligned labels
+  // Section breakdown list using aligned labels
   const sectionBreakdownList = score.sections
     .map(s => `         - ${s.label}: ${s.score}/${s.max} (${s.pct}%)`)
     .join("\n");
@@ -32,29 +53,31 @@ export function buildReportPrompt(score: ScoreResult, answers: Answers) {
 Critical Rule:
   • Never fabricate statistics, quotes, or information.
   • Use only verifiable data from reputable sources.
-  • If a requested data point cannot be found from a credible source, say it is unavailable.
-  • Statistics and benchmarks must be from 2023 or newer. Foundational frameworks older than 2023 may be cited only if still standard.
-  • Approved domains: mckinsey.com, gartner.com, deloitte.com, pwc.com, accenture.com, forrester.com, weforum.org, oecd.org, technologyreview.com, hbr.org, aiindex.stanford.edu (or equivalent).
-  • Cite with domain names only. No full URLs.
-+  • When citing, include the name of the report or publication (e.g., “McKinsey, *The State of AI in 2024*”) whenever available.  
-+  • If the exact report or publication title cannot be determined, fall back to citing the domain only (e.g., “mckinsey.com”).  
-+  • Never include full URLs.  
-  • Do not write generic claims like "studies show" without a citation.
-  • If no stat from approved domains (2023+), insert "[no reliable 2023+ benchmark found]" instead of fabricating or using outside sources.
-  • Sector/region-specific data is preferred; if missing, explicitly state its absence.
-  • No two consecutive sections may start with the same subject phrase; vary sentence openings.
-  • Confidence Meter must include a one-line reason (for example: "Low — limited workforce data provided").
+  • Statistics and benchmarks must be from 2023 or newer. Foundational frameworks older than 2023 may be cited only if still standard and named.
+  • Approved organizations include: McKinsey, Gartner, Deloitte, PwC, Accenture, Forrester, World Economic Forum, OECD, MIT Technology Review, Harvard Business Review, Stanford AI Index, or equivalent of similar caliber.
+
+Citation Requirements (strict):
+  • When citing, include the organization AND the exact report/publication name and year if available (e.g., "McKinsey, The State of AI in 2024").
+  • If the exact report/publication title cannot be determined, cite the organization and a clear publication type (e.g., "Gartner, 2024 industry note"). 
+  • Only if neither is available, fall back to the organization/domain alone (e.g., "mckinsey.com").
+  • Never include full URLs.
+  • Do not write generic claims like "studies show" without a citation formatted as above.
+  • If no stat from approved organizations (2023+) is available, insert "[no reliable 2023+ benchmark found]" and use a qualitative insight instead.
+
+Sector & Region Benchmarking:
+  • Prefer sector-specific (${sectorLabel}) and region-specific (${regionLabel}) data when selecting benchmarks and vignettes.
+  • If sector- or region-specific data is not available, explicitly write: "No ${sectorLabel !== "not specified" ? "sector" : ""}${sectorLabel !== "not specified" && regionLabel !== "not specified" ? "/" : ""}${regionLabel !== "not specified" ? "region" : ""}-specific benchmark found; using cross-industry reference."
+  • Avoid mixing sectors or regions in a way that confuses applicability. Make applicability explicit.
 
 Style & Evidence Rules:
   • For each section, write one short narrative paragraph, 3–5 sentences, following Insight → Evidence → Implication.
   • Vary sentence openings and verbs. Avoid repeating the same phrasing across sections.
   • Use at most one quantified stat per section. Executive Summary may include two.
-  • Do not use phrases like "up to X%", "~X%", or "Yx more likely" unless they appear exactly in a 2023+ cited source.
-  • Provide at least two sections that use a brief qualitative vignette from a cited report instead of a percentage.
-  • Do not cite the same domain in consecutive sections if another credible 2023+ source exists. Avoid using any single domain more than twice across the whole report.
+  • Do not use phrases like "up to X%", "~X%", or "Yx more likely" unless they appear exactly in a 2023+ cited report/publication.
+  • Provide at least two sections that use a brief qualitative vignette from a cited report/publication instead of a percentage.
+  • Do not cite the same organization in consecutive sections if another credible 2023+ source exists. Avoid using any single organization more than twice across the whole report.
   • End each section with one line: "If unchanged: ...".
   • For sections scoring ≥75%, the "If unchanged" line should state what to preserve and the risk of backsliding.
-  • If you cannot locate a reliable 2023+ benchmark for a claim, write: "No reliable 2023+ benchmark found," and provide a qualitative insight instead.
   • Recommendations must tie only to sections or pain points with a direct causal link.
 
 Task:
@@ -63,7 +86,7 @@ Task:
 Report Structure:
   1) Executive Summary
      • One tight paragraph with overall score and tier, where the org is strong vs fragile, and what that means in practice.
-     • Benchmark comparison with at most two stats, each cited from 2023+.
+     • Benchmark comparison with at most two stats, each cited with organization + report/publication name (2023+).
      • Limitations & Assumptions: call out missing sector or region and any other input gaps.
      • Confidence Meter: High, Medium, or Low, with one-line reason.
        Guidance:
@@ -77,12 +100,12 @@ Report Structure:
      • Tier adjustment note: ${score.notes?.tierAdjustedDueToLowDataMaturity ? "Adjusted due to low data maturity" : "No adjustment"}.
      • Section scores:
 ${sectionBreakdownList}
-     • Interpret what this tier means in practical business terms, citing a 2023+ framework if available.
+     • Interpret what this tier means in practical business terms, citing a 2023+ framework or maturity model (name the framework/publication).
 
   3) Detailed Section Analysis
      • Use the Insight → Evidence → Implication paragraph pattern.
      • Tie the analysis to these pain points where relevant: ${painPoints}.
-     • Include at most one quantified 2023+ stat with a domain citation, or use a qualitative vignette with a citation.
+     • Include at most one quantified 2023+ stat with a named report/publication, or use a qualitative vignette with a citation.
      • If unchanged: one sentence on the likely consequence in 6–12 months.
      • Treat high-scoring sections as "preserve and guard against backsliding": ${highSections}.
      • Treat low-scoring sections as priority fixes: ${lowSections}.
@@ -91,26 +114,29 @@ ${sectionBreakdownList}
   4) Pain Points Analysis
      • Reflect the selected pain points: ${painPoints}.
      • Explicitly map each pain point to low-scoring section(s). Example: "Scaling bottlenecks → Strategic Planning 0/4; KPI gaps → Measurement & Analytics 0/5".
-     • Use one cited data point from 2023+ and one brief case or vignette. Avoid stacking percentages.
+     • Use one 2023+ cited stat with a report/publication name and one brief case/vignette. Avoid stacking percentages.
 
   5) Recommendations & Next Steps
      • Provide 3–5 items. For each:
        - Action (clear and specific).
        - Owner and horizon (who; 30, 60, or 90 days).
        - Tied scores/pains with a direct link (for example: "Addresses Data Foundation and Measurement & Analytics; pain: SLA misses").
-       - Evidence: one 2023+ source, domain only.
+       - Evidence: one 2023+ report/publication (organization + title; no URLs).
        - Expected benefit or leading indicator to watch.
 
   6) Sources
-     • List all domains used, once each.
+     • List each organization once, with the report/publication name(s) and year(s) used, e.g.:
+       - McKinsey — "The State of AI in 2024"
+       - Gartner — "AI in Retail Analytics 2023"; "Risk & Compliance Outlook 2024"
+     • If a report/publication name was not available, list the organization/domain alone.
 
 Tone:
   • Consulting, factual, succinct. No hype.
   • Vary sentence structure. Avoid repetitive templates.
 
 Inputs:
-  • Sector: ${answers.sector || "not specified"}
-  • Region: ${answers.region || "not specified"}
+  • Sector: ${sectorLabel}
+  • Region: ${regionLabel}
   • Current tools (Q1): ${joinOrNone(answers.q1)}
   • Data maturity (Q2): ${answers.q2 || "not specified"}
   • Workforce readiness (Q3): ${answers.q3 || "not specified"}
@@ -120,6 +146,6 @@ Inputs:
   • Leadership commitment (Q7): ${answers.q7 || "not specified"}
   • Pain points (Q8): ${painPoints}
   • Urgency (Q9): ${urgency}
-  • Scoring guide: Max 35; AI-Enhanced 25–35; Getting Started 15–24; Not Ready Yet 0–14.
+  • Scoring guide: Max 35; AI-Enhanced / Developing / Foundation Stage.
 `;
 }

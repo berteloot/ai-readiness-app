@@ -1,9 +1,11 @@
 // scoring.ts
 
 export type Answers = {
-  sector?: string;
-  region?: string;
+  // Context-only (not scored)
+  sector?: string; // "retail" | "financial_services" | "telecom" | "bpo" | "healthcare" | "manufacturing" | "logistics" | "other"
+  region?: string; // "na" | "emea" | "apac" | "latam" | "global"
 
+  // Scored items
   q1?: string[]; // multi
   q2?: string;   // single
   q3?: string;   // single
@@ -11,8 +13,10 @@ export type Answers = {
   q5?: string[]; // multi
   q6?: string[]; // multi
   q7?: string;   // single
-  q8?: string[]; // multi (non-scored)
-  q9?: string;   // single (non-scored)
+
+  // Non-scored, used for narrative/qualification
+  q8?: string[]; // Pain points (multi)
+  q9?: string;   // Urgency (single)
 };
 
 export type ScoreResult = {
@@ -20,15 +24,22 @@ export type ScoreResult = {
   overallPct: number; // 0..100
   tier: "AI-Enhanced" | "Developing" | "Foundation Stage";
 
-  // raw section math
+  // Raw section math
   breakdown: Record<"s1"|"s2"|"s3"|"s4"|"s5"|"s6"|"s7", number>;
   breakdownMax: Record<"s1"|"s2"|"s3"|"s4"|"s5"|"s6"|"s7", number>;
   breakdownPct: Record<"s1"|"s2"|"s3"|"s4"|"s5"|"s6"|"s7", number>;
 
-  // label-aligned view for the prompt/rendering
+  // Label-aligned view for rendering/prompt
   sections: Array<{
     id: "s1"|"s2"|"s3"|"s4"|"s5"|"s6"|"s7";
-    label: "Technology Infrastructure" | "Data Foundation" | "Human Capital" | "Strategic Planning" | "Measurement & Analytics" | "Risk Management" | "Organizational Support";
+    label:
+      | "Technology Infrastructure"
+      | "Data Foundation"
+      | "Human Capital"
+      | "Strategic Planning"
+      | "Measurement & Analytics"
+      | "Risk Management"
+      | "Organizational Support";
     score: number;
     max: number;
     pct: number; // 0..100
@@ -42,7 +53,7 @@ export type ScoreResult = {
   };
 };
 
-/* helpers */
+/* Helpers */
 function norm(val?: string) {
   return (val || "")
     .toLowerCase()
@@ -67,25 +78,25 @@ function pct(part: number, max: number) {
 }
 
 export function scoreAnswers(a: Answers): ScoreResult {
-  // Section labels aligned to your report
+  // Section labels aligned to the report
   const labels = {
-    s1: "Technology Infrastructure",
-    s2: "Data Foundation",
-    s3: "Human Capital",
-    s4: "Strategic Planning",
-    s5: "Measurement & Analytics",
-    s6: "Risk Management",
-    s7: "Organizational Support",
+    s1: "Technology Infrastructure",  // q1
+    s2: "Data Foundation",            // q2
+    s3: "Human Capital",              // q3
+    s4: "Strategic Planning",         // q4 (scalability readiness)
+    s5: "Measurement & Analytics",    // q5
+    s6: "Risk Management",            // q6 (security & compliance)
+    s7: "Organizational Support",     // q7 (leadership/budget)
   } as const;
 
-  // Max points (kept as your original totals = 35)
+  // Max points (sum = 35)
   const maxes = { s1: 8, s2: 4, s3: 4, s4: 4, s5: 5, s6: 6, s7: 4 } as const;
 
   // S1 Technology Infrastructure (automation level)
   const q1Set = new Set(cleanMulti(a.q1));
   const s1Keys = ["chatbots", "rpa", "ai_assistants", "qa_analytics"];
   const s1Raw = s1Keys.reduce((acc, k) => acc + (q1Set.has(k) ? 1 : 0), 0);
-  const s1 = Math.min(s1Raw * 2, maxes.s1);
+  const s1 = Math.min(s1Raw * 2, maxes.s1); // 2 pts each, cap 8
 
   // S2 Data Foundation
   const mapQ2: Record<string, number> = {
@@ -105,7 +116,7 @@ export function scoreAnswers(a: Answers): ScoreResult {
   };
   const s3 = mapQ3[norm(a.q3)] ?? 0;
 
-  // S4 Strategic Planning (scalability)
+  // S4 Strategic Planning (scalability readiness)
   const mapQ4: Record<string, number> = {
     full_scalable: 4,
     extended_multi: 2,
@@ -146,7 +157,7 @@ export function scoreAnswers(a: Answers): ScoreResult {
     s7: pct(s7, maxes.s7),
   };
 
-  // Label-aligned sections (used by prompt to keep names consistent)
+  // Sections array for rendering and the prompt
   const sections = (Object.keys(breakdown) as Array<keyof typeof breakdown>).map((id) => ({
     id,
     label: labels[id],
@@ -155,40 +166,37 @@ export function scoreAnswers(a: Answers): ScoreResult {
     pct: breakdownPct[id],
   }));
 
-  // Tier by percentage (future-proof if you ever reweight)
+  // Tier by percentage (future-proof if you reweight)
   let tier: ScoreResult["tier"];
-  if (overallPct >= 72) tier = "AI-Enhanced";       // ≈ 25/35
-  else if (overallPct >= 43) tier = "Developing"; // ≈ 15/35
+  if (overallPct >= 72) tier = "AI-Enhanced";        // ~>= 25/35
+  else if (overallPct >= 43) tier = "Developing";    // ~>= 15/35
   else tier = "Foundation Stage";
 
   const notes: ScoreResult["notes"] = {};
 
-  // Original data maturity downgrade: can't be top tier if Data is too low
+  // Data maturity downgrade: can't be top tier if Data is too low
   if (tier === "AI-Enhanced" && s2 <= 1) {
     tier = "Developing";
     notes.tierAdjustedDueToLowDataMaturity = true;
   }
 
-  // Fundamental gates (optional but recommended): zero in Data or Security blocks top tier
+  // Fundamental gates: zeros in Data/Security block top tier; both zero push to bottom
   if ((s2 === 0 || s6 === 0) && tier === "AI-Enhanced") {
     tier = "Developing";
     notes.tierAdjustedDueToLowDataMaturity = true;
   }
-  // Both zero pushes to Foundation Stage
   if (s2 === 0 && s6 === 0) {
     tier = "Foundation Stage";
     notes.tierAdjustedDueToLowDataMaturity = true;
   }
 
-  // Red flags to surface in the report (optional)
+  // Red flags to help the writer call out critical gaps
   const redFlags: string[] = [];
   if (s2 === 0) redFlags.push("Data Foundation is 0/4");
   if (s6 === 0) redFlags.push("Risk Management is 0/6");
   if (s5 === 0) redFlags.push("No KPI tracking");
   if (s7 === 0) redFlags.push("No executive sponsor or budget");
-  if (redFlags.length) {
-    notes.redFlags = redFlags;
-  }
+  if (redFlags.length) notes.redFlags = redFlags;
 
   return { score, overallPct, tier, breakdown, breakdownMax, breakdownPct, sections, maxScore, notes };
 }
