@@ -57,12 +57,13 @@ Critical Rule:
   • Approved organizations include: McKinsey, Gartner, Deloitte, PwC, Accenture, Forrester, World Economic Forum, OECD, MIT Technology Review, Harvard Business Review, Stanford AI Index, or equivalent of similar caliber.
 
 Citation Requirements (strict):
-  • When citing, include the organization AND the exact report/publication name and year if available (e.g., "McKinsey, The State of AI in 2024").
-  • If the exact report/publication title cannot be determined, cite the organization and a clear publication type (e.g., "Gartner, 2024 industry note"). 
+  • When citing, include the organization AND the exact report/publication name and year if available (e.g., "McKinsey — The State of AI in 2024", 2024).
+  • If the exact report/publication title cannot be determined, cite the organization and a clear publication type (e.g., "Gartner — 2024 industry note"). 
   • Only if neither is available, fall back to the organization/domain alone (e.g., "mckinsey.com").
+  • Cite-or-Skip rule: If you cannot attach a named publication to a quantitative claim, do not use a number; use a qualitative insight and add "[no reliable 2023+ benchmark found]".
+  • Claim→source proximity: Place the citation immediately at the end of the sentence containing the claim, not grouped later.
   • Never include full URLs.
   • Do not write generic claims like "studies show" without a citation formatted as above.
-  • If no stat from approved organizations (2023+) is available, insert "[no reliable 2023+ benchmark found]" and use a qualitative insight instead.
 
 Sector & Region Benchmarking:
   • Prefer sector-specific (${sectorLabel}) and region-specific (${regionLabel}) data when selecting benchmarks and vignettes.
@@ -128,7 +129,15 @@ ${sectionBreakdownList}
      • List each organization once, with the report/publication name(s) and year(s) used, e.g.:
        - McKinsey — "The State of AI in 2024"
        - Gartner — "AI in Retail Analytics 2023"; "Risk & Compliance Outlook 2024"
-     • If a report/publication name was not available, list the organization/domain alone.
+     • If a report/publication name was not available, indicate: (title unavailable — domain cited)
+
+  7) Evidence Ledger (claim → source check)
+     • List 3–6 of the most important quantitative claims as bullet points.
+     • For each, restate the claim in ≤20 words and attach the exact citation token used in the text.
+       Example:
+       - "AI TRiSM adopters improve model adoption by ~50% by 2026." → (Gartner — "Top Strategic Technology Trends 2023", 2023)
+     • If any claim lacked a named publication, include:
+       - [audit flag] Publication title unavailable for: "<short claim>" (used organization-level fallback).
 
 Tone:
   • Consulting, factual, succinct. No hype.
