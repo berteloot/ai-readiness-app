@@ -14,6 +14,7 @@ This document outlines the security improvements implemented to secure the admin
 5. **Session Storage**: Used insecure sessionStorage for authentication state
 6. **Insecure Login**: No CSRF protection, no brute force protection, vulnerable to credential stuffing
 7. **Frontend Data Fetching**: Admin page made API calls before authentication, exposing PII
+8. **Stored XSS Vulnerability**: AI reports rendered with dangerouslySetInnerHTML without sanitization
 
 ## Security Improvements Implemented
 
@@ -73,7 +74,19 @@ This document outlines the security improvements implemented to secure the admin
   - CSRF token integration
   - Brute force protection UI feedback
 
-### 8. Secure API Endpoints
+### 8. XSS Protection & HTML Sanitization
+- **Implementation**: `src/lib/sanitizer.ts`
+- **Features**:
+  - Comprehensive HTML tag whitelisting (only safe tags allowed)
+  - Attribute filtering (removes dangerous attributes)
+  - CSS sanitization (prevents CSS-based attacks)
+  - Script tag removal (prevents JavaScript execution)
+  - Event handler removal (prevents event-based XSS)
+  - Protocol filtering (blocks javascript:, data:, vbscript:)
+  - Safe markdown to HTML conversion
+  - Used in both frontend rendering and email generation
+
+### 9. Secure API Endpoints
 All admin endpoints now require authentication:
 
 - `GET /api/admin/users` - List all users
@@ -84,7 +97,7 @@ All admin endpoints now require authentication:
 - `GET /api/admin/test-db` - Test database connection
 - `GET/POST /api/admin/login` - Secure login with CSRF protection
 
-### 9. Audit Logging
+### 10. Audit Logging
 - All admin actions are logged with user identification
 - Logs include:
   - Admin user email
@@ -111,7 +124,7 @@ ADMIN_SESSION_SECRET=your-32+character-random-secret
 ## Security Best Practices Implemented
 
 1. **Principle of Least Privilege**: Only authenticated admins can access endpoints
-2. **Defense in Depth**: Multiple layers of security (auth + rate limiting + CSRF + brute force protection)
+2. **Defense in Depth**: Multiple layers of security (auth + rate limiting + CSRF + brute force protection + XSS protection)
 3. **Secure Session Management**: JWT tokens with expiration + secure httpOnly cookies
 4. **Input Validation**: All inputs validated before processing
 5. **Error Handling**: Secure error messages that don't leak information
@@ -120,6 +133,8 @@ ADMIN_SESSION_SECRET=your-32+character-random-secret
 8. **Brute Force Protection**: Prevents credential stuffing attacks
 9. **Timing Attack Protection**: Secure password comparison
 10. **Frontend Security**: No unauthorized data fetching or display
+11. **XSS Prevention**: Comprehensive HTML sanitization for all user-generated content
+12. **Content Security**: Whitelist-based approach to HTML rendering
 
 ## Testing Security
 
@@ -149,7 +164,13 @@ To test the security improvements:
    # Should return 403 Forbidden
    ```
 
-5. **With Valid Token**:
+5. **XSS Protection**:
+   ```bash
+   # Try to inject script tags in AI report
+   # Should be sanitized and rendered safely
+   ```
+
+6. **With Valid Token**:
    ```bash
    # First get CSRF token
    curl /api/admin/login
@@ -172,6 +193,8 @@ To test the security improvements:
 - [ ] Monitor brute force attempts
 - [ ] Monitor failed CSRF token validations
 - [ ] Set up alerts for suspicious admin activity
+- [ ] Test XSS protection with malicious payloads
+- [ ] Verify HTML sanitization is working correctly
 
 ## Future Security Enhancements
 
@@ -183,6 +206,8 @@ To test the security improvements:
 6. **CORS Configuration**: Restrict CORS for admin endpoints
 7. **Password Policy**: Implement strong password requirements
 8. **Account Lockout**: Add permanent account lockout after repeated violations
+9. **Content Security Policy**: Implement CSP headers
+10. **Subresource Integrity**: Add SRI for external resources
 
 ## Monitoring and Alerting
 
@@ -196,6 +221,8 @@ Monitor these security events:
 - Failed API calls with 401/403 status codes
 - Multiple failed login attempts from same IP
 - Account blocking events
+- XSS attempts in AI reports
+- Malicious HTML content detection
 
 ## Security Incident Response
 
@@ -204,15 +231,18 @@ Monitor these security events:
    - Revoke all active admin sessions
    - Review audit logs for unauthorized access
    - Change admin password if compromised
+   - Check for XSS payloads in stored data
 
 2. **Investigation**:
    - Analyze failed login attempts
    - Review API access patterns
    - Check for data exfiltration
    - Identify attack vectors
+   - Examine AI report content for malicious code
 
 3. **Recovery**:
    - Implement additional security measures
    - Update security policies
    - Conduct security training
    - Document lessons learned
+   - Sanitize any stored malicious content

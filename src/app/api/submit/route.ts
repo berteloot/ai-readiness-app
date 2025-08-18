@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { scoreAnswers, type Answers, type ScoreResult } from '@/lib/scoring';
 import { buildReportPrompt } from '@/lib/prompt';
 import { PrismaClient } from '@prisma/client';
+import { convertMarkdownToSafeHTML } from '@/lib/sanitizer';
 
 
 const prisma = new PrismaClient();
@@ -187,32 +188,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Convert markdown to HTML for email display
-function convertMarkdownToHTML(markdown: string): string {
-  return markdown
-    // Convert headers
-    .replace(/^### (.*$)/gim, '<h3 style="margin: 20px 0 10px 0; color: #495057; font-size: 18px; font-weight: 600;">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 style="margin: 25px 0 15px 0; color: #495057; font-size: 20px; font-weight: 600;">$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1 style="margin: 30px 0 20px 0; color: #495057; font-size: 24px; font-weight: 700;">$1</h1>')
-    // Convert bold text
-    .replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600; color: #495057;">$1</strong>')
-    // Convert italic text
-    .replace(/\*(.*?)\*/g, '<em style="font-style: italic; color: #495057;">$1</em>')
-    // Convert line breaks
-    .replace(/\n\n/g, '</p><p style="margin: 10px 0;">')
-    // Convert single line breaks
-    .replace(/\n/g, '<br>')
-    // Clean up citations to only show organization names, not full URLs
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links but keep text
-    .replace(/https?:\/\/[^\s]+/g, '') // Remove any remaining URLs
-    // Wrap in paragraphs
-    .replace(/^(.*)$/gm, '<p style="margin: 10px 0;">$1</p>')
-    // Clean up empty paragraphs
-    .replace(/<p style="margin: 10px 0;"><\/p>/g, '')
-    // Remove extra paragraph wrappers
-    .replace(/<p style="margin: 10px 0;"><p style="margin: 10px 0;">/g, '<p style="margin: 10px 0;">')
-    .replace(/<\/p><\/p>/g, '</p>');
-}
+// SECURITY: Using secure sanitizer instead of vulnerable local function
 
 function mapTier(tier: string): 'NOT_READY' | 'GETTING_STARTED' | 'AI_ENHANCED' {
   switch (tier) {
@@ -446,7 +422,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
           <div class="ai-report">
             <h3>AI-Generated Analysis & Recommendations</h3>
             <div class="ai-content">
-              ${convertMarkdownToHTML(aiReport)}
+              ${convertMarkdownToSafeHTML(aiReport)}
             </div>
           </div>
         </div>

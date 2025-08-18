@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { convertMarkdownToSafeHTML } from '@/lib/sanitizer';
 
 
 
@@ -32,32 +33,8 @@ interface ContactModalProps {
   } | null;
 }
 
-// Simple markdown to HTML converter
-function convertMarkdownToHTML(markdown: string): string {
-  return markdown
-    // Convert headers
-    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold text-text-primary mt-4 mb-2">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-text-primary mt-6 mb-3">$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-text-primary mt-8 mb-4">$1</h1>')
-    // Convert bold text
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-text-primary">$1</strong>')
-    // Convert italic text
-    .replace(/\*(.*?)\*/g, '<em class="text-text-secondary">$1</em>')
-    // Convert line breaks
-    .replace(/\n\n/g, '</p><p class="mb-3">')
-    // Convert single line breaks
-    .replace(/\n/g, '<br>')
-    // Clean up citations to only show organization names, not full URLs
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links but keep text
-    .replace(/https?:\/\/[^\s]+/g, '') // Remove any remaining URLs
-    // Wrap in paragraphs
-    .replace(/^(.*)$/gm, '<p class="mb-3">$1</p>')
-    // Clean up empty paragraphs
-    .replace(/<p class="mb-3"><\/p>/g, '')
-    // Remove extra paragraph wrappers
-    .replace(/<p class="mb-3"><p class="mb-3">/g, '<p class="mb-3">')
-    .replace(/<\/p><\/p>/g, '</p>');
-}
+// SECURITY: Removed vulnerable convertMarkdownToHTML function
+// Now using secure sanitizer from @/lib/sanitizer
 
 export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, isLoading, result, assessmentData }: ContactModalProps) {
   const {
@@ -214,7 +191,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
                   <div 
                     className="prose prose-sm max-w-none text-sm text-text-secondary leading-relaxed"
                     dangerouslySetInnerHTML={{ 
-                      __html: convertMarkdownToHTML(result.aiReport) 
+                      __html: convertMarkdownToSafeHTML(result.aiReport) 
                     }}
                   />
                 </div>
