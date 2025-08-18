@@ -2,10 +2,65 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateAdminPassword, generateCSRFToken, getClientIP } from '@/lib/adminAuth';
 import { cookies } from 'next/headers';
 
+// Rate limiting for admin login
+const LOGIN_RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_LOGIN_ATTEMPTS_PER_WINDOW = 10; // Max 10 login attempts per 15 minutes per IP
+
+// In-memory rate limiting store (use Redis in production)
+const loginRateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+/**
+ * Check rate limiting for admin login
+ */
+function checkLoginRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = loginRateLimitStore.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    // Reset or create new record
+    loginRateLimitStore.set(ip, {
+      count: 1,
+      resetTime: now + LOGIN_RATE_LIMIT_WINDOW
+    });
+    return true;
+  }
+  
+  if (record.count >= MAX_LOGIN_ATTEMPTS_PER_WINDOW) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+/**
+ * Clean up expired rate limit records
+ */
+function cleanupLoginRateLimitStore() {
+  const now = Date.now();
+  for (const [ip, record] of loginRateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      loginRateLimitStore.delete(ip);
+    }
+  }
+}
+
+// Clean up expired records every 5 minutes
+setInterval(cleanupLoginRateLimitStore, 5 * 60 * 1000);
+
 export async function POST(request: NextRequest) {
   try {
-    // Get client IP for brute force protection
+    // SECURITY: Rate limiting check for admin login
     const clientIP = getClientIP(request);
+    if (!checkLoginRateLimit(clientIP)) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    // Get client IP for brute force protection
+    const clientIPForBruteForce = getClientIP(request);
     
     // Check if this is a login attempt or CSRF token request
     const contentType = request.headers.get('content-type');
@@ -33,7 +88,7 @@ export async function POST(request: NextRequest) {
       }
       
       // Validate password with brute force protection
-      const result = await validateAdminPassword(password, clientIP, csrfToken);
+      const result = await validateAdminPassword(password, clientIPForBruteForce, csrfToken);
       
       if (result.success && result.token) {
         // Create response with token

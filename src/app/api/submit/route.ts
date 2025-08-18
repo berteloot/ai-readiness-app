@@ -3,12 +3,91 @@ import { scoreAnswers, type Answers, type ScoreResult } from '@/lib/scoring';
 import { buildReportPrompt } from '@/lib/prompt';
 import { PrismaClient } from '@prisma/client';
 import { convertMarkdownToSafeHTML } from '@/lib/sanitizer';
+import { z } from 'zod';
 
+// SECURITY: Comprehensive input validation schemas
+const submitRequestSchema = z.object({
+  email: z.string().email('Invalid email format').max(254, 'Email too long'),
+  company: z.string().min(1, 'Company name required').max(100, 'Company name too long'),
+  consent: z.boolean().refine(val => val === true, 'Consent is required'),
+  // Validate answers structure and values
+  q1: z.array(z.string()).min(1, 'At least one selection required').max(4, 'Too many selections'),
+  q2: z.string().regex(/^[0-4]$/, 'Invalid score value'),
+  q3: z.string().regex(/^[0-4]$/, 'Invalid score value'),
+  q4: z.string().regex(/^[0-4]$/, 'Invalid score value'),
+  q5: z.array(z.string()).min(1, 'At least one selection required').max(5, 'Too many selections'),
+  q6: z.array(z.string()).min(1, 'At least one selection required').max(3, 'Too many selections'),
+  q7: z.string().regex(/^[0-4]$/, 'Invalid score value'),
+}).strict(); // Reject any additional properties
+
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_SUBMISSIONS_PER_WINDOW = 3; // Max 3 submissions per 15 minutes per IP
+
+// In-memory rate limiting store (use Redis in production)
+const submissionRateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 const prisma = new PrismaClient();
 
+/**
+ * Check rate limiting for submissions
+ */
+function checkSubmissionRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = submissionRateLimitStore.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    // Reset or create new record
+    submissionRateLimitStore.set(ip, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW
+    });
+    return true;
+  }
+  
+  if (record.count >= MAX_SUBMISSIONS_PER_WINDOW) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+/**
+ * Clean up expired rate limit records
+ */
+function cleanupRateLimitStore() {
+  const now = Date.now();
+  for (const [ip, record] of submissionRateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      submissionRateLimitStore.delete(ip);
+    }
+  }
+}
+
+// Clean up expired records every 5 minutes
+setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting check
+    const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    if (!checkSubmissionRateLimit(clientIP)) {
+      return NextResponse.json(
+        { error: 'Too many submissions. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    // SECURITY: Check request size limit
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10000) { // 10KB limit
+      return NextResponse.json(
+        { error: 'Request payload too large' },
+        { status: 413 }
+      );
+    }
+
     // Check for required environment variables
     const requiredEnvVars = {
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
@@ -31,26 +110,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { email, company, consent, ...answers } = body;
-
-    // Validate required fields
-    if (!email || !company || !consent) {
+    // SECURITY: Parse and validate request body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json(
-        { error: 'Email, company name, and consent are required' },
+        { error: 'Invalid JSON payload' },
         { status: 400 }
       );
     }
 
+    // SECURITY: Validate input with Zod schema
+    const validationResult = submitRequestSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('Input validation failed:', validationResult.error.issues);
+      return NextResponse.json(
+        { 
+          error: 'Invalid input data',
+          details: validationResult.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        },
+        { status: 400 }
+      );
+    }
 
+    const { email, company, consent, ...answers } = validationResult.data;
 
-    // Calculate score
-    const result = scoreAnswers(answers as Answers);
+    // SECURITY: Additional business logic validation
+    if (!consent) {
+      return NextResponse.json(
+        { error: 'Consent is required to proceed' },
+        { status: 400 }
+      );
+    }
+
+    // SECURITY: Validate answer values are within expected ranges
+    const totalScore = scoreAnswers(answers as Answers);
+    if (totalScore.score < 0 || totalScore.score > totalScore.maxScore) {
+      console.error('Score validation failed:', totalScore);
+      return NextResponse.json(
+        { error: 'Invalid assessment data' },
+        { status: 400 }
+      );
+    }
 
     // Generate AI report using OpenAI
     let aiReport = '';
     try {
-      const prompt = buildReportPrompt(result, answers as Answers);
+      const prompt = buildReportPrompt(totalScore, answers as Answers);
       
       const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -115,11 +222,11 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: 'text/plain',
-              value: generateEmailText(result, aiReport, answers as Answers, company),
+              value: generateEmailText(totalScore, aiReport, answers as Answers, company),
             },
             {
               type: 'text/html',
-              value: generateEmailHTML(result, aiReport, answers as Answers, company),
+              value: generateEmailHTML(totalScore, aiReport, answers as Answers, company),
             },
           ],
         }),
@@ -152,8 +259,8 @@ export async function POST(request: NextRequest) {
           },
           company,
           answers,
-          score: result.score,
-          tier: mapTier(result.tier),
+          score: totalScore.score,
+          tier: mapTier(totalScore.tier),
           aiReport,
           painPoints: extractPainPoints(answers as Answers),
           emailedAt: emailSent ? new Date() : null,
@@ -170,7 +277,7 @@ export async function POST(request: NextRequest) {
     // Return the calculated score, AI report, and email status
     return NextResponse.json({
       success: true,
-      result,
+      result: totalScore,
       aiReport,
       emailSent,
       message: emailSent 
@@ -203,32 +310,39 @@ function mapTier(tier: string): 'NOT_READY' | 'GETTING_STARTED' | 'AI_ENHANCED' 
   }
 }
 
-function extractPainPoints(answers: Answers): string[] {
+function extractPainPoints(answers: Record<string, string | string[]>): string[] {
   const painPoints: string[] = [];
   
   // q1: string[] - Current Automation Level (2 points each, max 8)
-  const q1Score = answers.q1.reduce((sum: number, val: string) => sum + parseInt(val), 0);
+  const q1 = answers.q1 as string[];
+  const q1Score = q1.reduce((sum: number, val: string) => sum + parseInt(val), 0);
   if (q1Score < 4) painPoints.push('Technology Infrastructure');
   
   // q2: string - Data Infrastructure Maturity (0-4 points)
-  if (parseInt(answers.q2) < 2) painPoints.push('Data Foundation');
+  const q2 = answers.q2 as string;
+  if (parseInt(q2) < 2) painPoints.push('Data Foundation');
   
   // q3: string - Workforce AI Adoption Readiness (0-4 points)
-  if (parseInt(answers.q3) < 2) painPoints.push('Human Capital');
+  const q3 = answers.q3 as string;
+  if (parseInt(q3) < 2) painPoints.push('Human Capital');
   
   // q4: string - Scalability of CX Operations (0-4 points)
-  if (parseInt(answers.q4) < 2) painPoints.push('Strategic Planning');
+  const q4 = answers.q4 as string;
+  if (parseInt(q4) < 2) painPoints.push('Strategic Planning');
   
   // q5: string[] - KPI Tracking Sophistication (1 point each, max 5)
-  const q5Score = answers.q5.reduce((sum: number, val: string) => sum + parseInt(val), 0);
+  const q5 = answers.q5 as string[];
+  const q5Score = q5.reduce((sum: number, val: string) => sum + parseInt(val), 0);
   if (q5Score < 3) painPoints.push('Measurement & Analytics');
   
   // q6: string[] - Security & Compliance (2 points each, max 6)
-  const q6Score = answers.q6.reduce((sum: number, val: string) => sum + parseInt(val), 0);
+  const q6 = answers.q6 as string[];
+  const q6Score = q6.reduce((sum: number, val: string) => sum + parseInt(val), 0);
   if (q6Score < 3) painPoints.push('Risk Management');
   
   // q7: string - Budget & Executive Buy-In (0-4 points)
-  if (parseInt(answers.q7) < 2) painPoints.push('Organizational Support');
+  const q7 = answers.q7 as string;
+  if (parseInt(q7) < 2) painPoints.push('Organizational Support');
   
   return painPoints;
 }

@@ -16,6 +16,10 @@ This document outlines the security improvements implemented to secure the admin
 7. **Frontend Data Fetching**: Admin page made API calls before authentication, exposing PII
 8. **Stored XSS Vulnerability**: AI reports rendered with dangerouslySetInnerHTML without sanitization
 9. **Information Leakage**: Health endpoint revealed environment variables and configuration details
+10. **No Server-Side Input Validation**: Critical POST endpoints lacked proper validation
+11. **No Rate Limiting on Critical Endpoints**: Vulnerable to resource abuse and spam
+12. **Build Error Masking**: Configuration could ship broken or unsafe code
+13. **Auto Schema Mutation**: Production database schema changes during deployment
 
 ## Security Improvements Implemented
 
@@ -118,6 +122,37 @@ All admin endpoints now require authentication:
   - Prevents attacker reconnaissance
   - Maintains operational monitoring capability
 
+### 12. Server-Side Input Validation
+- **Implementation**: Zod schemas for all critical endpoints
+- **Features**:
+  - Comprehensive request validation
+  - Type-safe input processing
+  - Payload size limits (10KB max)
+  - Strict schema enforcement
+  - Malicious payload rejection
+  - Business logic validation
+  - Prevents injection attacks
+
+### 13. Rate Limiting on Critical Endpoints
+- **Implementation**: IP-based rate limiting for all public endpoints
+- **Features**:
+  - Submit endpoint: 3 submissions per 15 minutes per IP
+  - Admin login: 10 attempts per 15 minutes per IP
+  - Admin endpoints: 100 requests per 15 minutes per IP
+  - Automatic cleanup of expired records
+  - Prevents resource abuse and spam
+  - Protects against automated attacks
+
+### 14. Build Security & Quality Assurance
+- **Implementation**: Secure build configuration and deployment practices
+- **Features**:
+  - TypeScript error checking enabled
+  - ESLint error checking enabled
+  - No error masking during builds
+  - Manual database schema management
+  - Prevents shipping broken/unsafe code
+  - Protects production database integrity
+
 ## Security Headers
 
 All admin API calls now include:
@@ -147,6 +182,10 @@ ADMIN_SESSION_SECRET=your-32+character-random-secret
 11. **XSS Prevention**: Comprehensive HTML sanitization for all user-generated content
 12. **Content Security**: Whitelist-based approach to HTML rendering
 13. **Information Security**: No sensitive configuration or environment details exposed
+14. **Server-Side Validation**: Zod schemas for all critical endpoints
+15. **Rate Limiting**: IP-based rate limiting for all public endpoints
+16. **Build Security**: No error masking, proper TypeScript and ESLint checking
+17. **Deployment Safety**: Manual database schema management, no auto-mutation
 
 ## Testing Security
 
@@ -190,7 +229,29 @@ To test the security improvements:
    # Should NOT reveal API keys, email addresses, or database info
    ```
 
-7. **With Valid Token**:
+7. **Input Validation Testing**:
+   ```bash
+   # Try to submit with invalid data
+   curl -X POST /api/submit -d '{"invalid": "data"}'
+   # Should return 400 with validation errors
+   
+   # Try to submit oversized payload
+   curl -X POST /api/submit -d '{"data": "'$(printf 'x%.0s' {1..10000})'"}'
+   # Should return 413 Payload Too Large
+   ```
+
+8. **Rate Limiting Testing**:
+   ```bash
+   # Submit multiple times quickly
+   for i in {1..5}; do curl -X POST /api/submit -d '{"valid": "data"}'; done
+   # Should get rate limited after 3 attempts
+   
+   # Try admin login multiple times
+   for i in {1..15}; do curl -X POST /api/admin/login -d '{"password": "wrong"}'; done
+   # Should get rate limited after 10 attempts
+   ```
+
+9. **With Valid Token**:
    ```bash
    # First get CSRF token
    curl /api/admin/login
