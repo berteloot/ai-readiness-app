@@ -12,6 +12,8 @@ This document outlines the security improvements implemented to secure the admin
 3. **No Rate Limiting**: Endpoints could be abused for DoS attacks
 4. **No Audit Logging**: No way to track who accessed what data
 5. **Session Storage**: Used insecure sessionStorage for authentication state
+6. **Insecure Login**: No CSRF protection, no brute force protection, vulnerable to credential stuffing
+7. **Frontend Data Fetching**: Admin page made API calls before authentication, exposing PII
 
 ## Security Improvements Implemented
 
@@ -30,7 +32,48 @@ This document outlines the security improvements implemented to secure the admin
   - Automatic cleanup of expired rate limit records
   - Configurable limits via environment variables
 
-### 3. Secure API Endpoints
+### 3. Brute Force Protection
+- **Implementation**: Built into `adminAuth.ts`
+- **Configuration**:
+  - Maximum 5 login attempts per 15 minutes per IP
+  - 30-minute account blocking after max attempts reached
+  - Automatic reset of attempt counter after successful login
+  - IP-based tracking and blocking
+
+### 4. CSRF Protection
+- **Implementation**: `src/lib/adminAuth.ts` + login route
+- **Features**:
+  - CSRF token generation using cryptographically secure random bytes
+  - httpOnly cookies for token storage
+  - Token validation on every login attempt
+  - 15-minute token expiration
+  - SameSite strict cookie policy
+
+### 5. Secure Session Management
+- **Implementation**: Login route with secure cookies
+- **Features**:
+  - httpOnly session cookies (prevents XSS token theft)
+  - Secure flag in production (HTTPS only)
+  - SameSite strict policy (prevents CSRF)
+  - Automatic token cleanup after successful login
+
+### 6. Timing Attack Protection
+- **Implementation**: `securePasswordCompare()` function
+- **Features**:
+  - Constant-time password comparison
+  - Prevents timing-based password enumeration attacks
+  - Secure string comparison algorithm
+
+### 7. Frontend Security
+- **Implementation**: Admin page with comprehensive security checks
+- **Features**:
+  - Token validation before any data fetching
+  - Loading states prevent unauthorized content display
+  - Security guards on all API calling functions
+  - CSRF token integration
+  - Brute force protection UI feedback
+
+### 8. Secure API Endpoints
 All admin endpoints now require authentication:
 
 - `GET /api/admin/users` - List all users
@@ -39,8 +82,9 @@ All admin endpoints now require authentication:
 - `DELETE /api/admin/submissions/[id]` - Delete individual submission
 - `POST /api/admin/test-submission` - Create test data
 - `GET /api/admin/test-db` - Test database connection
+- `GET/POST /api/admin/login` - Secure login with CSRF protection
 
-### 4. Audit Logging
+### 9. Audit Logging
 - All admin actions are logged with user identification
 - Logs include:
   - Admin user email
@@ -48,12 +92,7 @@ All admin endpoints now require authentication:
   - Target resource (user ID, submission ID)
   - Timestamp
   - Success/failure status
-
-### 5. Frontend Security
-- JWT tokens stored in localStorage (more secure than sessionStorage)
-- Automatic logout on token expiration
-- Authorization headers included in all API calls
-- Error handling for authentication failures
+  - IP address for security monitoring
 
 ## Security Headers
 
@@ -72,11 +111,15 @@ ADMIN_SESSION_SECRET=your-32+character-random-secret
 ## Security Best Practices Implemented
 
 1. **Principle of Least Privilege**: Only authenticated admins can access endpoints
-2. **Defense in Depth**: Multiple layers of security (auth + rate limiting + logging)
-3. **Secure Session Management**: JWT tokens with expiration
+2. **Defense in Depth**: Multiple layers of security (auth + rate limiting + CSRF + brute force protection)
+3. **Secure Session Management**: JWT tokens with expiration + secure httpOnly cookies
 4. **Input Validation**: All inputs validated before processing
 5. **Error Handling**: Secure error messages that don't leak information
 6. **Audit Trail**: Complete logging of all admin actions
+7. **CSRF Protection**: Prevents cross-site request forgery attacks
+8. **Brute Force Protection**: Prevents credential stuffing attacks
+9. **Timing Attack Protection**: Secure password comparison
+10. **Frontend Security**: No unauthorized data fetching or display
 
 ## Testing Security
 
@@ -94,12 +137,26 @@ To test the security improvements:
    # Should return 401 Unauthorized
    ```
 
-3. **With Valid Token**:
+3. **Brute Force Protection**:
    ```bash
-   # First get token via login
-   curl -X POST /api/admin/login -d '{"password":"admin-password"}'
-   # Then use token
-   curl -H "Authorization: Bearer <token>" /api/admin/users
+   # Try logging in with wrong password multiple times
+   # Should get blocked after 5 attempts
+   ```
+
+4. **CSRF Protection**:
+   ```bash
+   # Try to login without CSRF token
+   # Should return 403 Forbidden
+   ```
+
+5. **With Valid Token**:
+   ```bash
+   # First get CSRF token
+   curl /api/admin/login
+   # Then login with password and CSRF token
+   curl -X POST /api/admin/login -d '{"password":"admin-password","csrfToken":"token"}'
+   # Then use returned JWT token
+   curl -H "Authorization: Bearer <jwt-token>" /api/admin/users
    # Should return 200 OK with data
    ```
 
@@ -112,6 +169,9 @@ To test the security improvements:
 - [ ] Regular security audits
 - [ ] Consider implementing IP whitelisting for admin access
 - [ ] Set up automated security scanning
+- [ ] Monitor brute force attempts
+- [ ] Monitor failed CSRF token validations
+- [ ] Set up alerts for suspicious admin activity
 
 ## Future Security Enhancements
 
@@ -121,12 +181,38 @@ To test the security improvements:
 4. **Advanced Rate Limiting**: Implement Redis-based rate limiting
 5. **Security Headers**: Add security headers middleware
 6. **CORS Configuration**: Restrict CORS for admin endpoints
+7. **Password Policy**: Implement strong password requirements
+8. **Account Lockout**: Add permanent account lockout after repeated violations
 
 ## Monitoring and Alerting
 
 Monitor these security events:
 - Failed authentication attempts
 - Rate limit violations
+- Brute force attempts and IP blocking
+- CSRF token validation failures
 - Unusual admin activity patterns
 - Token expiration and renewal
 - Failed API calls with 401/403 status codes
+- Multiple failed login attempts from same IP
+- Account blocking events
+
+## Security Incident Response
+
+1. **Immediate Actions**:
+   - Block suspicious IP addresses
+   - Revoke all active admin sessions
+   - Review audit logs for unauthorized access
+   - Change admin password if compromised
+
+2. **Investigation**:
+   - Analyze failed login attempts
+   - Review API access patterns
+   - Check for data exfiltration
+   - Identify attack vectors
+
+3. **Recovery**:
+   - Implement additional security measures
+   - Update security policies
+   - Conduct security training
+   - Document lessons learned

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verify } from 'jsonwebtoken';
+import { verify, sign } from 'jsonwebtoken';
+import { randomBytes, createHash } from 'crypto';
 
 // Admin session configuration
 const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'fallback-secret-change-in-production';
@@ -10,8 +11,14 @@ const ADMIN_SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
 const MAX_REQUESTS_PER_WINDOW = 100; // Max requests per 15 minutes per IP
 
+// Brute force protection
+const LOGIN_ATTEMPT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_LOGIN_ATTEMPTS = 5; // Max login attempts per 15 minutes per IP
+const BRUTE_FORCE_BLOCK_DURATION = 30 * 60 * 1000; // 30 minutes block
+
 // In-memory store for rate limiting (in production, use Redis or similar)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const loginAttemptStore = new Map<string, { attempts: number; resetTime: number; blockedUntil: number | null }>();
 
 export interface AdminUser {
   id: string;
@@ -20,6 +27,133 @@ export interface AdminUser {
   iat: number;
   exp: number;
 }
+
+export interface LoginAttempt {
+  ip: string;
+  timestamp: number;
+  success: boolean;
+}
+
+/**
+ * Generate CSRF token
+ */
+export function generateCSRFToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+/**
+ * Verify CSRF token
+ */
+export function verifyCSRFToken(token: string, storedToken: string): boolean {
+  return token === storedToken;
+}
+
+/**
+ * Hash password for comparison (timing attack resistant)
+ */
+function securePasswordCompare(inputPassword: string, storedPassword: string): boolean {
+  if (inputPassword.length !== storedPassword.length) {
+    return false;
+  }
+  
+  let result = 0;
+  for (let i = 0; i < inputPassword.length; i++) {
+    result |= inputPassword.charCodeAt(i) ^ storedPassword.charCodeAt(i);
+  }
+  
+  return result === 0;
+}
+
+/**
+ * Check brute force protection
+ */
+function checkBruteForceProtection(ip: string): { allowed: boolean; remainingAttempts: number; blockedUntil: number | null } {
+  const now = Date.now();
+  const record = loginAttemptStore.get(ip);
+  
+  if (!record) {
+    // First attempt
+    loginAttemptStore.set(ip, {
+      attempts: 1,
+      resetTime: now + LOGIN_ATTEMPT_WINDOW,
+      blockedUntil: null
+    });
+    return { allowed: true, remainingAttempts: MAX_LOGIN_ATTEMPTS - 1, blockedUntil: null };
+  }
+  
+  // Check if currently blocked
+  if (record.blockedUntil && now < record.blockedUntil) {
+    return { 
+      allowed: false, 
+      remainingAttempts: 0, 
+      blockedUntil: record.blockedUntil 
+    };
+  }
+  
+  // Check if window has reset
+  if (now > record.resetTime) {
+    loginAttemptStore.set(ip, {
+      attempts: 1,
+      resetTime: now + LOGIN_ATTEMPT_WINDOW,
+      blockedUntil: null
+    });
+    return { allowed: true, remainingAttempts: MAX_LOGIN_ATTEMPTS - 1, blockedUntil: null };
+  }
+  
+  // Check if max attempts reached
+  if (record.attempts >= MAX_LOGIN_ATTEMPTS) {
+    // Block this IP
+    const blockedUntil = now + BRUTE_FORCE_BLOCK_DURATION;
+    record.blockedUntil = blockedUntil;
+    return { allowed: false, remainingAttempts: 0, blockedUntil };
+  }
+  
+  // Increment attempts
+  record.attempts++;
+  return { 
+    allowed: true, 
+    remainingAttempts: MAX_LOGIN_ATTEMPTS - record.attempts, 
+    blockedUntil: null 
+  };
+}
+
+/**
+ * Record login attempt
+ */
+function recordLoginAttempt(ip: string, success: boolean): void {
+  const now = Date.now();
+  const record = loginAttemptStore.get(ip);
+  
+  if (success && record) {
+    // Reset attempts on successful login
+    record.attempts = 0;
+    record.blockedUntil = null;
+  }
+}
+
+/**
+ * Clean up expired records
+ */
+function cleanupStores() {
+  const now = Date.now();
+  
+  // Clean rate limit store
+  for (const [ip, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(ip);
+    }
+  }
+  
+  // Clean login attempt store
+  for (const [ip, record] of loginAttemptStore.entries()) {
+    if (now > record.resetTime && (!record.blockedUntil || now > record.blockedUntil)) {
+      loginAttemptStore.delete(ip);
+    }
+  }
+}
+
+// Clean up expired records every 5 minutes
+setInterval(cleanupStores, 5 * 60 * 1000);
 
 /**
  * Verify admin authentication token
@@ -49,7 +183,6 @@ export function createAdminToken(email: string): string {
     role: 'admin'
   };
   
-  const { sign } = require('jsonwebtoken');
   return sign(payload, ADMIN_SESSION_SECRET, { 
     expiresIn: '24h',
     issuer: 'ai-readiness-app',
@@ -80,21 +213,6 @@ function checkRateLimit(ip: string): boolean {
   record.count++;
   return true;
 }
-
-/**
- * Clean up expired rate limit records
- */
-function cleanupRateLimitStore() {
-  const now = Date.now();
-  for (const [ip, record] of rateLimitStore.entries()) {
-    if (now > record.resetTime) {
-      rateLimitStore.delete(ip);
-    }
-  }
-}
-
-// Clean up expired records every 5 minutes
-setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
 
 /**
  * Admin authentication middleware
@@ -171,19 +289,62 @@ export function getAdminUserFromRequest(request: NextRequest): AdminUser | null 
 }
 
 /**
- * Validate admin password and create session
+ * Validate admin password and create session with security measures
  */
-export async function validateAdminPassword(password: string): Promise<{ success: boolean; token?: string; error?: string }> {
+export async function validateAdminPassword(password: string, ip: string, csrfToken?: string): Promise<{ 
+  success: boolean; 
+  token?: string; 
+  error?: string;
+  remainingAttempts?: number;
+  blockedUntil?: number;
+}> {
+  // Check brute force protection first
+  const bruteForceCheck = checkBruteForceProtection(ip);
+  if (!bruteForceCheck.allowed) {
+    return { 
+      success: false, 
+      error: `Too many failed attempts. Try again after ${Math.ceil((bruteForceCheck.blockedUntil! - Date.now()) / 60000)} minutes.`,
+      blockedUntil: bruteForceCheck.blockedUntil
+    };
+  }
+  
   const adminPassword = process.env.ADMIN_PASSWORD;
   
   if (!adminPassword) {
     return { success: false, error: 'Admin access not configured' };
   }
   
-  if (password !== adminPassword) {
-    return { success: false, error: 'Invalid password' };
-  }
+  // Use timing-attack resistant comparison
+  const isValidPassword = securePasswordCompare(password, adminPassword);
   
-  const token = createAdminToken('admin');
-  return { success: true, token };
+  if (isValidPassword) {
+    // Record successful attempt
+    recordLoginAttempt(ip, true);
+    
+    const token = createAdminToken('admin');
+    return { 
+      success: true, 
+      token,
+      remainingAttempts: bruteForceCheck.remainingAttempts
+    };
+  } else {
+    // Record failed attempt
+    recordLoginAttempt(ip, false);
+    
+    return { 
+      success: false, 
+      error: 'Invalid password',
+      remainingAttempts: bruteForceCheck.remainingAttempts
+    };
+  }
+}
+
+/**
+ * Get client IP address from request
+ */
+export function getClientIP(request: NextRequest): string {
+  return request.ip || 
+         request.headers.get('x-forwarded-for') || 
+         request.headers.get('x-real-ip') || 
+         'unknown';
 }

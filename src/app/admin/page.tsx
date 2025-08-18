@@ -40,12 +40,16 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isValidatingToken, setIsValidatingToken] = useState(true); // Add loading state for token validation
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
 
   const [isDeletingUsers, setIsDeletingUsers] = useState(false);
   const [error, setError] = useState('');
@@ -67,6 +71,28 @@ export default function AdminPage() {
       setIsValidatingToken(false);
     }
   }, []);
+
+  // Fetch CSRF token when component mounts
+  useEffect(() => {
+    if (!isValidatingToken && !isAuthenticated) {
+      fetchCSRFToken();
+    }
+  }, [isValidatingToken, isAuthenticated]);
+
+  const fetchCSRFToken = async () => {
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'GET'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCsrfToken(data.csrfToken);
+      }
+    } catch (error) {
+      console.error('Failed to fetch CSRF token:', error);
+    }
+  };
 
   const validateTokenAndSetAuth = async (token: string) => {
     try {
@@ -104,6 +130,15 @@ export default function AdminPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setRemainingAttempts(null);
+    setIsBlocked(false);
+    setBlockedUntil(null);
+
+    if (!csrfToken) {
+      setError('CSRF token not available. Please refresh the page.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/admin/login', {
@@ -111,7 +146,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, csrfToken }),
       });
 
       if (response.ok) {
@@ -120,6 +155,7 @@ export default function AdminPage() {
           setAuthToken(data.token);
           setIsAuthenticated(true);
           localStorage.setItem('adminToken', data.token);
+          setRemainingAttempts(data.remainingAttempts);
           fetchSubmissions(data.token);
           fetchUsers(data.token);
         } else {
@@ -127,7 +163,20 @@ export default function AdminPage() {
         }
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Invalid password');
+        
+        if (errorData.blockedUntil) {
+          setIsBlocked(true);
+          setBlockedUntil(errorData.blockedUntil);
+          const minutesLeft = Math.ceil((errorData.blockedUntil - Date.now()) / 60000);
+          setError(`Account temporarily blocked due to too many failed attempts. Try again in ${minutesLeft} minutes.`);
+        } else {
+          setError(errorData.error || 'Invalid password');
+          setRemainingAttempts(errorData.remainingAttempts);
+          
+          if (errorData.remainingAttempts !== undefined) {
+            setError(`${errorData.error || 'Invalid password'}. ${errorData.remainingAttempts} attempts remaining.`);
+          }
+        }
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -440,16 +489,28 @@ This action cannot be undone.`;
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm text-center">{error}</div>
+              <div className="text-red-600 text-sm text-center">
+                {error}
+                {remainingAttempts !== null && remainingAttempts > 0 && (
+                  <div className="mt-1 text-xs">
+                    {remainingAttempts} login attempts remaining
+                  </div>
+                )}
+                {isBlocked && blockedUntil && (
+                  <div className="mt-1 text-xs font-semibold">
+                    Account blocked until {new Date(blockedUntil).toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
             )}
 
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isBlocked}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? 'Signing in...' : isBlocked ? 'Account Blocked' : 'Sign in'}
               </button>
             </div>
           </form>
