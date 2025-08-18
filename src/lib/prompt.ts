@@ -36,6 +36,9 @@ Critical Rule:
   • Statistics and benchmarks must be from 2023 or newer. Foundational frameworks older than 2023 may be cited only if still standard.
   • Approved domains: mckinsey.com, gartner.com, deloitte.com, pwc.com, accenture.com, forrester.com, weforum.org, oecd.org, technologyreview.com, hbr.org, aiindex.stanford.edu (or equivalent).
   • Cite with domain names only. No full URLs.
++  • When citing, include the name of the report or publication (e.g., “McKinsey, *The State of AI in 2024*”) whenever available.  
++  • If the exact report or publication title cannot be determined, fall back to citing the domain only (e.g., “mckinsey.com”).  
++  • Never include full URLs.  
   • Do not write generic claims like "studies show" without a citation.
   • If no stat from approved domains (2023+), insert "[no reliable 2023+ benchmark found]" instead of fabricating or using outside sources.
   • Sector/region-specific data is preferred; if missing, explicitly state its absence.
