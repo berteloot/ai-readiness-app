@@ -1,24 +1,20 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const envStatus = {
-    NODE_ENV: process.env.NODE_ENV || 'not set',
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'present' : 'missing',
-    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY ? 'present' : 'missing',
-    SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || 'not set',
-    DATABASE_URL: process.env.DATABASE_URL ? 'present' : 'missing',
-    timestamp: new Date().toISOString(),
-  };
+  // SECURITY: Only check if required environment variables exist, don't reveal their values
+  const hasRequiredVars = !!(
+    process.env.OPENAI_API_KEY && 
+    process.env.SENDGRID_API_KEY && 
+    process.env.SENDGRID_FROM_EMAIL
+  );
 
-  const hasRequiredVars = envStatus.OPENAI_API_KEY === 'present' && 
-                          envStatus.SENDGRID_API_KEY === 'present' && 
-                          envStatus.SENDGRID_FROM_EMAIL !== 'not set';
-
+  // SECURITY: Don't leak environment details, only return minimal health status
   return NextResponse.json({
     status: hasRequiredVars ? 'healthy' : 'unhealthy',
-    environment: envStatus,
+    timestamp: new Date().toISOString(),
+    // SECURITY: Don't reveal which specific variables are missing
     message: hasRequiredVars 
-      ? 'All required environment variables are present' 
-      : 'Missing required environment variables',
+      ? 'Service is operational' 
+      : 'Service configuration incomplete',
   });
 }

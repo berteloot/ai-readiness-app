@@ -15,6 +15,7 @@ This document outlines the security improvements implemented to secure the admin
 6. **Insecure Login**: No CSRF protection, no brute force protection, vulnerable to credential stuffing
 7. **Frontend Data Fetching**: Admin page made API calls before authentication, exposing PII
 8. **Stored XSS Vulnerability**: AI reports rendered with dangerouslySetInnerHTML without sanitization
+9. **Information Leakage**: Health endpoint revealed environment variables and configuration details
 
 ## Security Improvements Implemented
 
@@ -107,6 +108,16 @@ All admin endpoints now require authentication:
   - Success/failure status
   - IP address for security monitoring
 
+### 11. Information Leakage Prevention
+- **Implementation**: Secure health endpoint design
+- **Features**:
+  - No environment variable values exposed
+  - No configuration details revealed
+  - No infrastructure fingerprinting
+  - Minimal health status only
+  - Prevents attacker reconnaissance
+  - Maintains operational monitoring capability
+
 ## Security Headers
 
 All admin API calls now include:
@@ -135,6 +146,7 @@ ADMIN_SESSION_SECRET=your-32+character-random-secret
 10. **Frontend Security**: No unauthorized data fetching or display
 11. **XSS Prevention**: Comprehensive HTML sanitization for all user-generated content
 12. **Content Security**: Whitelist-based approach to HTML rendering
+13. **Information Security**: No sensitive configuration or environment details exposed
 
 ## Testing Security
 
@@ -170,7 +182,15 @@ To test the security improvements:
    # Should be sanitized and rendered safely
    ```
 
-6. **With Valid Token**:
+6. **Information Leakage Prevention**:
+   ```bash
+   # Check health endpoint
+   curl /api/health
+   # Should return minimal info without environment details
+   # Should NOT reveal API keys, email addresses, or database info
+   ```
+
+7. **With Valid Token**:
    ```bash
    # First get CSRF token
    curl /api/admin/login
@@ -223,6 +243,8 @@ Monitor these security events:
 - Account blocking events
 - XSS attempts in AI reports
 - Malicious HTML content detection
+- Information leakage attempts
+- Health endpoint abuse or reconnaissance
 
 ## Security Incident Response
 
