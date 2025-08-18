@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { adminAuthMiddleware, getAdminUserFromRequest } from '@/lib/adminAuth';
 
 // Global variable to store Prisma instance
 let prisma: PrismaClient;
@@ -16,6 +17,16 @@ if (process.env.NODE_ENV === 'production') {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication first
+    const authResult = await adminAuthMiddleware(request);
+    if (authResult) {
+      return authResult;
+    }
+    
+    // Get admin user info for logging
+    const adminUser = getAdminUserFromRequest(request);
+    console.log(`Admin ${adminUser?.email} testing database connection`);
+    
     console.log('Database test endpoint called');
     
     // Check environment variables

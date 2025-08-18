@@ -10,26 +10,23 @@ export function buildReportPrompt(score: ScoreResult, answers: Answers) {
 
   const urgency = answers.q9 || "not specified";
 
-  // Identify high and low sections from computed percentages
-  const sectionNames: Record<keyof ScoreResult["breakdownPct"], string> = {
-    s1: "Automation",
-    s2: "Data",
-    s3: "Workforce",
-    s4: "Scalability",
-    s5: "KPIs",
-    s6: "Security",
-    s7: "Leadership",
-  };
+  // Derive high/low sections using the aligned labels from scoring.ts
+  const highSections =
+    score.sections
+      .filter(s => s.pct >= 75)
+      .map(s => `${s.label} ${s.score}/${s.max} (${s.pct}%)`)
+      .join("; ") || "none";
 
-  const highSections = (Object.keys(score.breakdownPct) as Array<keyof ScoreResult["breakdownPct"]>)
-    .filter(k => score.breakdownPct[k] >= 75)
-    .map(k => `${sectionNames[k]} ${score.breakdown[k]}/${score.breakdownMax[k]} (${score.breakdownPct[k]}%)`)
-    .join("; ") || "none";
+  const lowSections =
+    score.sections
+      .filter(s => s.pct <= 50)
+      .map(s => `${s.label} ${s.score}/${s.max} (${s.pct}%)`)
+      .join("; ") || "none";
 
-  const lowSections = (Object.keys(score.breakdownPct) as Array<keyof ScoreResult["breakdownPct"]>)
-    .filter(k => score.breakdownPct[k] <= 50)
-    .map(k => `${sectionNames[k]} ${score.breakdown[k]}/${score.breakdownMax[k]} (${score.breakdownPct[k]}%)`)
-    .join("; ") || "none";
+  // Render a breakdown list using aligned labels
+  const sectionBreakdownList = score.sections
+    .map(s => `         - ${s.label}: ${s.score}/${s.max} (${s.pct}%)`)
+    .join("\n");
 
   return `
 Critical Rule:
@@ -40,10 +37,10 @@ Critical Rule:
   • Approved domains: mckinsey.com, gartner.com, deloitte.com, pwc.com, accenture.com, forrester.com, weforum.org, oecd.org, technologyreview.com, hbr.org, aiindex.stanford.edu (or equivalent).
   • Cite with domain names only. No full URLs.
   • Do not write generic claims like "studies show" without a citation.
-	• If no stat from approved domains (2023+), insert “[no reliable 2023+ benchmark found]” instead of fabricating or using outside sources.
+  • If no stat from approved domains (2023+), insert "[no reliable 2023+ benchmark found]" instead of fabricating or using outside sources.
   • Sector/region-specific data is preferred; if missing, explicitly state its absence.
   • No two consecutive sections may start with the same subject phrase; vary sentence openings.
-  • Confidence Meter must include a one-line reason (e.g., “Low — limited workforce data provided”).
+  • Confidence Meter must include a one-line reason (for example: "Low — limited workforce data provided").
 
 Style & Evidence Rules:
   • For each section, write one short narrative paragraph, 3–5 sentences, following Insight → Evidence → Implication.
@@ -65,7 +62,8 @@ Report Structure:
      • One tight paragraph with overall score and tier, where the org is strong vs fragile, and what that means in practice.
      • Benchmark comparison with at most two stats, each cited from 2023+.
      • Limitations & Assumptions: call out missing sector or region and any other input gaps.
-     • Confidence Meter: High, Medium, or Low. Base this on evidence coverage:
+     • Confidence Meter: High, Medium, or Low, with one-line reason.
+       Guidance:
          - High: all major claims have 2023+ citations.
          - Medium: one or two claims lack 2023+ citations.
          - Low: more than two claims lack 2023+ citations.
@@ -75,33 +73,28 @@ Report Structure:
      • Tier: ${score.tier}.
      • Tier adjustment note: ${score.notes?.tierAdjustedDueToLowDataMaturity ? "Adjusted due to low data maturity" : "No adjustment"}.
      • Section scores:
-         - S1 Automation: ${score.breakdown.s1}/${score.breakdownMax.s1} (${score.breakdownPct.s1}%)
-         - S2 Data: ${score.breakdown.s2}/${score.breakdownMax.s2} (${score.breakdownPct.s2}%)
-         - S3 Workforce: ${score.breakdown.s3}/${score.breakdownMax.s3} (${score.breakdownPct.s3}%)
-         - S4 Scalability: ${score.breakdown.s4}/${score.breakdownMax.s4} (${score.breakdownPct.s4}%)
-         - S5 KPIs: ${score.breakdown.s5}/${score.breakdownMax.s5} (${score.breakdownPct.s5}%)
-         - S6 Security: ${score.breakdown.s6}/${score.breakdownMax.s6} (${score.breakdownPct.s6}%)
-         - S7 Leadership: ${score.breakdown.s7}/${score.breakdownMax.s7} (${score.breakdownPct.s7}%)
+${sectionBreakdownList}
      • Interpret what this tier means in practical business terms, citing a 2023+ framework if available.
 
-  3) Detailed Section Analysis (S1..S7)
+  3) Detailed Section Analysis
      • Use the Insight → Evidence → Implication paragraph pattern.
      • Tie the analysis to these pain points where relevant: ${painPoints}.
      • Include at most one quantified 2023+ stat with a domain citation, or use a qualitative vignette with a citation.
      • If unchanged: one sentence on the likely consequence in 6–12 months.
-     • High-scoring sections to treat as "preserve and guard against backsliding": ${highSections}.
-     • Low-scoring sections to treat as priority fixes: ${lowSections}.
+     • Treat high-scoring sections as "preserve and guard against backsliding": ${highSections}.
+     • Treat low-scoring sections as priority fixes: ${lowSections}.
+     • Reference sections by their labels exactly as listed above (do not use codes like S1).
 
   4) Pain Points Analysis
      • Reflect the selected pain points: ${painPoints}.
-     • Explicitly map each pain point to low-scoring section(s), for example "Scaling bottlenecks → S4 0/4; KPI gaps → S5 0/5".
+     • Explicitly map each pain point to low-scoring section(s). Example: "Scaling bottlenecks → Strategic Planning 0/4; KPI gaps → Measurement & Analytics 0/5".
      • Use one cited data point from 2023+ and one brief case or vignette. Avoid stacking percentages.
 
   5) Recommendations & Next Steps
      • Provide 3–5 items. For each:
        - Action (clear and specific).
        - Owner and horizon (who; 30, 60, or 90 days).
-       - Tied scores/pains with a direct link (e.g., "Addresses S2 and S5; pain: SLA misses").
+       - Tied scores/pains with a direct link (for example: "Addresses Data Foundation and Measurement & Analytics; pain: SLA misses").
        - Evidence: one 2023+ source, domain only.
        - Expected benefit or leading indicator to watch.
 

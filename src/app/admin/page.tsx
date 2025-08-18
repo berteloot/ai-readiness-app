@@ -38,6 +38,7 @@ interface Submission {
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [authToken, setAuthToken] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,11 +53,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     // Check if already authenticated
-    const authStatus = sessionStorage.getItem('adminAuthenticated');
-    if (authStatus === 'true') {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      setAuthToken(token);
       setIsAuthenticated(true);
-      fetchSubmissions();
-      fetchUsers();
+      fetchSubmissions(token);
+      fetchUsers(token);
     }
   }, []);
 
@@ -75,12 +77,19 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        setIsAuthenticated(true);
-        sessionStorage.setItem('adminAuthenticated', 'true');
-        fetchSubmissions();
-        fetchUsers();
+        const data = await response.json();
+        if (data.success && data.token) {
+          setAuthToken(data.token);
+          setIsAuthenticated(true);
+          localStorage.setItem('adminToken', data.token);
+          fetchSubmissions(data.token);
+          fetchUsers(data.token);
+        } else {
+          setError('Login failed');
+        }
       } else {
-        setError('Invalid password');
+        const errorData = await response.json();
+        setError(errorData.error || 'Invalid password');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -89,12 +98,19 @@ export default function AdminPage() {
     }
   };
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = async (token?: string) => {
+    const currentToken = token || authToken;
+    if (!currentToken) return;
+    
     setIsLoadingSubmissions(true);
     setError('');
     try {
       console.log('Fetching submissions...');
-      const response = await fetch('/api/admin/submissions');
+      const response = await fetch('/api/admin/submissions', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
       console.log('Submissions API response status:', response.status);
       
       if (response.ok) {
@@ -105,7 +121,13 @@ export default function AdminPage() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Submissions API Error:', errorData);
-        setError(`Failed to fetch submissions: ${errorData.error || 'Unknown error'}`);
+        if (response.status === 401) {
+          // Token expired or invalid
+          handleLogout();
+          setError('Session expired. Please login again.');
+        } else {
+          setError(`Failed to fetch submissions: ${errorData.error || 'Unknown error'}`);
+        }
       }
     } catch (err) {
       console.error('Network Error:', err);
@@ -115,12 +137,19 @@ export default function AdminPage() {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (token?: string) => {
+    const currentToken = token || authToken;
+    if (!currentToken) return;
+    
     setIsLoadingUsers(true);
     setError('');
     try {
       console.log('Fetching users...');
-      const response = await fetch('/api/admin/users');
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
       console.log('Users API response status:', response.status);
       
       if (response.ok) {
@@ -131,7 +160,13 @@ export default function AdminPage() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Users API Error:', errorData);
-        setError(`Failed to fetch users: ${errorData.error || 'Unknown error'}`);
+        if (response.status === 401) {
+          // Token expired or invalid
+          handleLogout();
+          setError('Session expired. Please login again.');
+        } else {
+          setError(`Failed to fetch users: ${errorData.error || 'Unknown error'}`);
+        }
       }
     } catch (err) {
       console.error('Network Error:', err);
@@ -143,7 +178,8 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    sessionStorage.removeItem('adminAuthenticated');
+    setAuthToken(null);
+    localStorage.removeItem('adminToken');
     setSubmissions([]);
     setUsers([]);
     setSelectedUsers(new Set());
@@ -214,6 +250,9 @@ This action cannot be undone.`;
           console.log('Deleting submission:', submission.id);
           const deleteResponse = await fetch(`/api/admin/submissions/${submission.id}`, {
             method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${authToken}`
+            }
           });
           
           if (!deleteResponse.ok) {
@@ -230,6 +269,7 @@ This action cannot be undone.`;
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({ userId: user.id }),
         });
@@ -242,11 +282,11 @@ This action cannot be undone.`;
         console.log('Successfully deleted user:', user.email);
       }
       
-      // Refresh data
-      console.log('Refreshing data after deletion');
-      await fetchSubmissions();
-      await fetchUsers();
-      setSelectedUsers(new Set());
+              // Refresh data
+        console.log('Refreshing data after deletion');
+        await fetchSubmissions(authToken || undefined);
+        await fetchUsers(authToken || undefined);
+        setSelectedUsers(new Set());
       
       console.log('User deletion completed successfully');
       
@@ -356,12 +396,17 @@ This action cannot be undone.`;
 
               <button
                 onClick={async () => {
-                  try {
-                    const response = await fetch('/api/admin/test-submission', { method: 'POST' });
+                                    try {
+                    const response = await fetch('/api/admin/test-submission', { 
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${authToken}`
+                      }
+                    });
                     if (response.ok) {
                       alert('Test data created successfully!');
-                      fetchSubmissions();
-                      fetchUsers();
+                      fetchSubmissions(authToken || undefined);
+                      fetchUsers(authToken || undefined);
                     } else {
                       alert('Failed to create test data');
                     }
@@ -376,8 +421,8 @@ This action cannot be undone.`;
               </button>
               <button
                 onClick={() => {
-                  fetchSubmissions();
-                  fetchUsers();
+                  fetchSubmissions(authToken || undefined);
+                  fetchUsers(authToken || undefined);
                 }}
                 disabled={isLoadingSubmissions || isLoadingUsers}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
@@ -446,7 +491,7 @@ This action cannot be undone.`;
                 <div className="px-4 py-8 text-center">
                   <div className="text-red-600 mb-4">{error}</div>
                   <button
-                    onClick={fetchSubmissions}
+                    onClick={() => fetchSubmissions(authToken || undefined)}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Retry
@@ -585,7 +630,7 @@ This action cannot be undone.`;
                 <div className="px-4 py-8 text-center">
                   <div className="text-red-600 mb-4">{error}</div>
                   <button
-                    onClick={fetchUsers}
+                    onClick={() => fetchUsers(authToken || undefined)}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Retry

@@ -1,25 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateAdminPassword } from '@/lib/adminAuth';
 
 export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json();
     
-    // Get admin password from environment variable
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    
-    if (!adminPassword) {
-      console.error('ADMIN_PASSWORD environment variable not set');
+    if (!password) {
       return NextResponse.json(
-        { error: 'Admin access not configured' },
-        { status: 500 }
+        { error: 'Password is required' },
+        { status: 400 }
       );
     }
     
-    if (password === adminPassword) {
-      return NextResponse.json({ success: true });
+    const result = await validateAdminPassword(password);
+    
+    if (result.success && result.token) {
+      return NextResponse.json({ 
+        success: true, 
+        token: result.token,
+        message: 'Login successful'
+      });
     } else {
       return NextResponse.json(
-        { error: 'Invalid password' },
+        { error: result.error || 'Authentication failed' },
         { status: 401 }
       );
     }

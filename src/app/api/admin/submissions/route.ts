@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { adminAuthMiddleware, getAdminUserFromRequest } from '@/lib/adminAuth';
 
 // Global variable to store Prisma instance
 let prisma: PrismaClient;
@@ -16,21 +17,16 @@ if (process.env.NODE_ENV === 'production') {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Admin submissions API called');
-    
-    // Get admin password from environment variable to verify access
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    
-    if (!adminPassword) {
-      console.error('ADMIN_PASSWORD environment variable not set');
-      return NextResponse.json(
-        { error: 'Admin access not configured' },
-        { status: 500 }
-      );
+    // Check authentication first
+    const authResult = await adminAuthMiddleware(request);
+    if (authResult) {
+      return authResult;
     }
     
-    console.log('Admin password check passed');
-
+    // Get admin user info for logging
+    const adminUser = getAdminUserFromRequest(request);
+    console.log(`Admin ${adminUser?.email} accessed submissions list`);
+    
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
       console.error('DATABASE_URL environment variable not set');
