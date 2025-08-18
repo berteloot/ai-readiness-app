@@ -9,10 +9,10 @@ if (process.env.NODE_ENV === 'production') {
   prisma = new PrismaClient();
 } else {
   // In development, use a global variable to prevent multiple instances
-  if (!(global as any).prisma) {
-    (global as any).prisma = new PrismaClient();
+  if (!(global as { prisma?: PrismaClient }).prisma) {
+    (global as { prisma?: PrismaClient }).prisma = new PrismaClient();
   }
-  prisma = (global as any).prisma;
+  prisma = (global as { prisma?: PrismaClient }).prisma!;
 }
 
 export async function GET(request: NextRequest) {
@@ -80,7 +80,8 @@ export async function GET(request: NextRequest) {
     }
     
     if (error && typeof error === 'object' && 'code' in error) {
-      errorCode = (error as any).code;
+      const prismaError = error as { code?: string };
+      errorCode = prismaError.code;
     }
     
     return NextResponse.json({

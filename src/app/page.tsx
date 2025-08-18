@@ -5,7 +5,16 @@ import AssessmentForm from '@/components/AssessmentForm';
 import ContactModal from '@/components/ContactModal';
 import { z } from 'zod';
 
-type FormData = z.infer<typeof import('@/components/AssessmentForm').default extends React.ComponentType<infer P> ? P : never>;
+interface FormData {
+  q1: string[];
+  q2: string;
+  q3: string;
+  q4: string;
+  q5: string[];
+  q6: string[];
+  q7: string;
+  company?: string;
+}
 
 interface ContactData {
   email: string;
@@ -62,7 +71,8 @@ export default function Home() {
         aiReport
       });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +140,7 @@ export default function Home() {
 
       {/* Main Assessment */}
       <div className="py-12 sm:py-16">
-        {error && (
+        {error ? (
           <div className="max-w-4xl mx-auto mobile-optimized mb-6 sm:mb-8">
             <div className="bg-error/10 border border-error/20 rounded-md p-4 sm:p-6">
               <div className="flex">
@@ -146,7 +156,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
 
         <AssessmentForm onSubmit={handleAssessmentComplete} isLoading={isLoading} />
       </div>

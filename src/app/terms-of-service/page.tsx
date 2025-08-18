@@ -42,14 +42,14 @@ export default function TermsOfService() {
                 Agreement to Terms
               </h2>
               <p className="mb-6">
-                By accessing and using the AI Readiness Assessment Tool (the "Service") provided by Lean Solutions Group ("we," "our," or "us"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service.
+                By accessing and using the AI Readiness Assessment Tool (the &ldquo;Service&rdquo;) provided by Lean Solutions Group (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;), you agree to be bound by these Terms of Service (&ldquo;Terms&rdquo;). If you disagree with any part of these terms, you may not access the Service.
               </p>
 
               <h2 className="text-xl font-semibold text-text-primary mb-4">
                 Description of Service
               </h2>
               <p className="mb-6">
-                The AI Readiness Assessment Tool is a comprehensive evaluation platform that analyzes your organization's readiness for artificial intelligence transformation. The Service provides personalized assessments, scoring, and detailed reports based on your responses to our evaluation questions.
+                The AI Readiness Assessment Tool is a comprehensive evaluation platform that analyzes your organization&apos;s readiness for artificial intelligence transformation. The Service provides personalized assessments, scoring, and detailed reports based on your responses to our evaluation questions.
               </p>
 
               <h2 className="text-xl font-semibold text-text-primary mb-4">
@@ -97,7 +97,7 @@ export default function TermsOfService() {
                 Disclaimers
               </h2>
               <p className="mb-6">
-                THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DISCLAIM ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+                THE SERVICE IS PROVIDED &ldquo;AS IS&rdquo; AND &ldquo;AS AVAILABLE&rdquo; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DISCLAIM ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
               </p>
 
               <h2 className="text-xl font-semibold text-text-primary mb-4">

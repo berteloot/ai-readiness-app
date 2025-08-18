@@ -220,7 +220,7 @@ function checkRateLimit(ip: string): boolean {
 export async function adminAuthMiddleware(request: NextRequest): Promise<NextResponse | null> {
   try {
     // Get client IP for rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     
     // Check rate limiting
     if (!checkRateLimit(ip)) {
@@ -304,7 +304,7 @@ export async function validateAdminPassword(password: string, ip: string, csrfTo
     return { 
       success: false, 
       error: `Too many failed attempts. Try again after ${Math.ceil((bruteForceCheck.blockedUntil! - Date.now()) / 60000)} minutes.`,
-      blockedUntil: bruteForceCheck.blockedUntil
+      blockedUntil: bruteForceCheck.blockedUntil || undefined
     };
   }
   
@@ -343,8 +343,7 @@ export async function validateAdminPassword(password: string, ip: string, csrfTo
  * Get client IP address from request
  */
 export function getClientIP(request: NextRequest): string {
-  return request.ip || 
-         request.headers.get('x-forwarded-for') || 
+  return request.headers.get('x-forwarded-for') || 
          request.headers.get('x-real-ip') || 
          'unknown';
 }

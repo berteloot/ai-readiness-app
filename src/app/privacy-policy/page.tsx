@@ -42,7 +42,7 @@ export default function PrivacyPolicy() {
                 Introduction
               </h2>
               <p className="mb-6">
-                Lean Solutions Group ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI Readiness Assessment Tool (the "Service").
+                Lean Solutions Group (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI Readiness Assessment Tool (the &ldquo;Service&rdquo;).
               </p>
 
               <h2 className="text-xl font-semibold text-text-primary mb-4">
@@ -117,7 +117,7 @@ export default function PrivacyPolicy() {
               </p>
 
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                Children's Privacy
+                Children&apos;s Privacy
               </h2>
               <p className="mb-6">
                 Our Service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.
@@ -127,7 +127,7 @@ export default function PrivacyPolicy() {
                 Changes to This Policy
               </h2>
               <p className="mb-6">
-                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last Updated" date.
+                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the &ldquo;Last Updated&rdquo; date.
               </p>
 
               <h2 className="text-xl font-semibold text-text-primary mb-4">
