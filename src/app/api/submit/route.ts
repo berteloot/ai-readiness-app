@@ -5,19 +5,27 @@ import { PrismaClient } from '@prisma/client';
 import { convertMarkdownToSafeHTML } from '@/lib/sanitizer';
 import { z } from 'zod';
 
+
 // SECURITY: Comprehensive input validation schemas
 const submitRequestSchema = z.object({
   email: z.string().email('Invalid email format').max(254, 'Email too long'),
   company: z.string().min(1, 'Company name required').max(100, 'Company name too long'),
   consent: z.boolean().refine(val => val === true, 'Consent is required'),
-  // Validate answers structure and values
-  q1: z.array(z.string()).min(1, 'At least one selection required').max(4, 'Too many selections'),
-  q2: z.string().regex(/^[0-4]$/, 'Invalid score value'),
-  q3: z.string().regex(/^[0-4]$/, 'Invalid score value'),
-  q4: z.string().regex(/^[0-4]$/, 'Invalid score value'),
-  q5: z.array(z.string()).min(1, 'At least one selection required').max(5, 'Too many selections'),
-  q6: z.array(z.string()).min(1, 'At least one selection required').max(3, 'Too many selections'),
-  q7: z.string().regex(/^[0-4]$/, 'Invalid score value'),
+  
+  // Context fields (optional)
+  sector: z.string().optional(),
+  region: z.string().optional(),
+  
+  // Assessment questions
+  q1: z.array(z.string()).min(1, 'At least one selection required').max(5, 'Too many selections'),
+  q2: z.string().min(1, 'Please select an option'),
+  q3: z.string().min(1, 'Please select an option'),
+  q4: z.string().min(1, 'Please select an option'),
+  q5: z.array(z.string()).min(1, 'At least one selection required').max(6, 'Too many selections'),
+  q6: z.array(z.string()).min(1, 'At least one selection required').max(4, 'Too many selections'),
+  q7: z.string().min(1, 'Please select an option'),
+  q8: z.array(z.string()).min(1, 'At least one selection required').max(3, 'Too many selections'),
+  q9: z.string().min(1, 'Please select an option'),
 }).strict(); // Reject any additional properties
 
 // Rate limiting configuration
@@ -313,36 +321,48 @@ function mapTier(tier: string): 'NOT_READY' | 'GETTING_STARTED' | 'AI_ENHANCED' 
 function extractPainPoints(answers: Record<string, string | string[]>): string[] {
   const painPoints: string[] = [];
   
-  // q1: string[] - Current Automation Level (2 points each, max 8)
+  // Simple logic based on answer values
+  // q1: Technology Infrastructure
   const q1 = answers.q1 as string[];
-  const q1Score = q1.reduce((sum: number, val: string) => sum + parseInt(val), 0);
-  if (q1Score < 4) painPoints.push('Technology Infrastructure');
+  if (q1 && (q1.includes('none') || q1.length === 0)) {
+    painPoints.push('Technology Infrastructure');
+  }
   
-  // q2: string - Data Infrastructure Maturity (0-4 points)
+  // q2: Data Foundation
   const q2 = answers.q2 as string;
-  if (parseInt(q2) < 2) painPoints.push('Data Foundation');
+  if (q2 && ['separate_systems', 'no_centralized'].includes(q2)) {
+    painPoints.push('Data Foundation');
+  }
   
-  // q3: string - Workforce AI Adoption Readiness (0-4 points)
+  // q3: Human Capital
   const q3 = answers.q3 as string;
-  if (parseInt(q3) < 2) painPoints.push('Human Capital');
+  if (q3 && ['no_training_open', 'resistant'].includes(q3)) {
+    painPoints.push('Human Capital');
+  }
   
-  // q4: string - Scalability of CX Operations (0-4 points)
+  // q4: Strategic Planning
   const q4 = answers.q4 as string;
-  if (parseInt(q4) < 2) painPoints.push('Strategic Planning');
+  if (q4 && ['limited_scaling', 'no_scalability'].includes(q4)) {
+    painPoints.push('Strategic Planning');
+  }
   
-  // q5: string[] - KPI Tracking Sophistication (1 point each, max 5)
+  // q5: Measurement & Analytics
   const q5 = answers.q5 as string[];
-  const q5Score = q5.reduce((sum: number, val: string) => sum + parseInt(val), 0);
-  if (q5Score < 3) painPoints.push('Measurement & Analytics');
+  if (q5 && (q5.includes('none') || q5.length === 0)) {
+    painPoints.push('Measurement & Analytics');
+  }
   
-  // q6: string[] - Security & Compliance (2 points each, max 6)
+  // q6: Risk Management
   const q6 = answers.q6 as string[];
-  const q6Score = q6.reduce((sum: number, val: string) => sum + parseInt(val), 0);
-  if (q6Score < 3) painPoints.push('Risk Management');
+  if (q6 && (q6.includes('none') || q6.length === 0)) {
+    painPoints.push('Risk Management');
+  }
   
-  // q7: string - Budget & Executive Buy-In (0-4 points)
+  // q7: Organizational Support
   const q7 = answers.q7 as string;
-  if (parseInt(q7) < 2) painPoints.push('Organizational Support');
+  if (q7 && ['interest_no_budget', 'limited_engagement'].includes(q7)) {
+    painPoints.push('Organizational Support');
+  }
   
   return painPoints;
 }
