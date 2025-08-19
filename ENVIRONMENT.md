@@ -1,6 +1,6 @@
 # Environment Variables
 
-This application requires the following environment variables to be set for secure operation:
+This application requires the following environment variables to be set for operation:
 
 ## Required Variables
 
@@ -13,36 +13,35 @@ This application requires the following environment variables to be set for secu
   - Should be a strong, unique password
   - Example: `MySecureAdminPassword123!`
 
-- `ADMIN_SESSION_SECRET`: JWT signing secret
-  - Should be a long, random string
-  - Example: `your-super-secret-jwt-key-here-change-in-production`
-  - **IMPORTANT**: Change this in production!
+## Simplified Authentication
 
-## Security Features
+The admin system now uses a simple, reliable authentication approach:
 
-The admin system now includes:
-
-1. **JWT-based Authentication**: Secure token-based sessions
-2. **Rate Limiting**: Prevents abuse (100 requests per 15 minutes per IP)
-3. **Audit Logging**: All admin actions are logged with user identification
-4. **Token Expiration**: Admin sessions expire after 24 hours
-5. **Secure Headers**: All admin API calls require Authorization header
+1. **Password-based Access**: Simple password validation against environment variable
+2. **No Complex Security Protocols**: Removed JWT, CSRF, rate limiting, and brute force protection
+3. **Reliable on Render**: Designed to work consistently across different hosting environments
+4. **Easy to Debug**: Simple authentication flow without complex security layers
 
 ## Setup Instructions
 
 1. Copy your existing `.env` file
-2. Add the new environment variables:
+2. Add the admin password:
    ```bash
    ADMIN_PASSWORD=your-secure-password
-   ADMIN_SESSION_SECRET=your-random-secret-key
    ```
 3. Restart your application
 
-## Production Security Checklist
+## Security Notes
 
-- [ ] Change `ADMIN_PASSWORD` to a strong password
-- [ ] Change `ADMIN_SESSION_SECRET` to a random 32+ character string
+- **Simplified for Reliability**: This approach prioritizes working functionality over complex security
+- **Environment-based**: Admin access is controlled by environment variable
+- **No Session Management**: Authentication is handled per-request
+- **Suitable for Development/Testing**: For production, consider additional security measures
+
+## Production Considerations
+
+- [ ] Use a strong, unique `ADMIN_PASSWORD`
 - [ ] Ensure `DATABASE_URL` uses SSL in production
-- [ ] Consider using environment-specific `.env` files
-- [ ] Regularly rotate admin passwords
+- [ ] Consider implementing additional security layers if needed
 - [ ] Monitor admin access logs
+- [ ] Regularly rotate admin passwords

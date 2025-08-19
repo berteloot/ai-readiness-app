@@ -36,28 +36,23 @@ interface Submission {
 }
 
 export default function AdminPage() {
-  // Initialize all state variables
+  // Simplified state variables
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const [isValidatingToken, setIsValidatingToken] = useState(true); // Add loading state for token validation
-  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
-  const [isBlocked, setIsBlocked] = useState(false);
-  const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
-
+  const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [isDeletingUsers, setIsDeletingUsers] = useState(false);
   const [error, setError] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'submissions' | 'users'>('submissions');
   const router = useRouter();
 
-  // CRITICAL SECURITY: Prevent any API calls or data fetching until properly authenticated
+  // Simple authentication check
   const isFullyAuthenticated = isAuthenticated && authToken && !isValidatingToken;
 
   useEffect(() => {
@@ -71,28 +66,6 @@ export default function AdminPage() {
       setIsValidatingToken(false);
     }
   }, []);
-
-  // Fetch CSRF token when component mounts
-  useEffect(() => {
-    if (!isValidatingToken && !isAuthenticated) {
-      fetchCSRFToken();
-    }
-  }, [isValidatingToken, isAuthenticated]);
-
-  const fetchCSRFToken = async () => {
-    try {
-      const response = await fetch('/api/admin/login', {
-        method: 'GET'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setCsrfToken(data.csrfToken);
-      }
-    } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
-    }
-  };
 
   const validateTokenAndSetAuth = async (token: string) => {
     try {
@@ -130,15 +103,6 @@ export default function AdminPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setRemainingAttempts(null);
-    setIsBlocked(false);
-    setBlockedUntil(null);
-
-    if (!csrfToken) {
-      setError('CSRF token not available. Please refresh the page.');
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const response = await fetch('/api/admin/login', {
@@ -146,7 +110,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password, csrfToken }),
+        body: JSON.stringify({ password }),
       });
 
       if (response.ok) {
@@ -155,7 +119,6 @@ export default function AdminPage() {
           setAuthToken(data.token);
           setIsAuthenticated(true);
           localStorage.setItem('adminToken', data.token);
-          setRemainingAttempts(data.remainingAttempts);
           // Fetch data immediately after setting authentication state
           fetchSubmissions(data.token);
           fetchUsers(data.token);
@@ -164,20 +127,7 @@ export default function AdminPage() {
         }
       } else {
         const errorData = await response.json();
-        
-        if (errorData.blockedUntil) {
-          setIsBlocked(true);
-          setBlockedUntil(errorData.blockedUntil);
-          const minutesLeft = Math.ceil((errorData.blockedUntil - Date.now()) / 60000);
-          setError(`Account temporarily blocked due to too many failed attempts. Try again in ${minutesLeft} minutes.`);
-        } else {
-          setError(errorData.error || 'Invalid password');
-          setRemainingAttempts(errorData.remainingAttempts);
-          
-          if (errorData.remainingAttempts !== undefined) {
-            setError(`${errorData.error || 'Invalid password'}. ${errorData.remainingAttempts} attempts remaining.`);
-          }
-        }
+        setError(errorData.error || 'Invalid password');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -187,8 +137,6 @@ export default function AdminPage() {
   };
 
   const fetchSubmissions = async (token?: string) => {
-    // CRITICAL SECURITY: Prevent API calls without proper authentication
-    // But allow calls when token is explicitly passed (for immediate post-login calls)
     if (!token && !isFullyAuthenticated) {
       console.error('Security violation: Attempted to fetch submissions without authentication');
       return;
@@ -233,8 +181,6 @@ export default function AdminPage() {
   };
 
   const fetchUsers = async (token?: string) => {
-    // CRITICAL SECURITY: Prevent API calls without proper authentication
-    // But allow calls when token is explicitly passed (for immediate post-login calls)
     if (!token && !isFullyAuthenticated) {
       console.error('Security violation: Attempted to fetch users without authentication');
       return;
@@ -287,8 +233,6 @@ export default function AdminPage() {
     setSelectedUsers(new Set());
   };
 
-
-
   const handleUserSelection = (userId: string) => {
     const newSelected = new Set(selectedUsers);
     if (newSelected.has(userId)) {
@@ -315,7 +259,6 @@ export default function AdminPage() {
   };
 
   const deleteSelectedUsers = async () => {
-    // CRITICAL SECURITY: Prevent destructive operations without proper authentication
     if (!isFullyAuthenticated) {
       console.error('Security violation: Attempted to delete users without authentication');
       return;
@@ -390,11 +333,11 @@ This action cannot be undone.`;
         console.log('Successfully deleted user:', user.email);
       }
       
-              // Refresh data
-        console.log('Refreshing data after deletion');
-        await fetchSubmissions(authToken || undefined);
-        await fetchUsers(authToken || undefined);
-        setSelectedUsers(new Set());
+      // Refresh data
+      console.log('Refreshing data after deletion');
+      await fetchSubmissions(authToken || undefined);
+      await fetchUsers(authToken || undefined);
+      setSelectedUsers(new Set());
       
       console.log('User deletion completed successfully');
       
@@ -460,7 +403,7 @@ This action cannot be undone.`;
     );
   }
 
-  // Prevent any rendering or API calls until authenticated
+  // Show login form if not authenticated
   if (!isAuthenticated || !authToken) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -483,7 +426,7 @@ This action cannot be undone.`;
                 name="password"
                 type="password"
                 required
-                autoComplete="new-password"
+                autoComplete="current-password"
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
@@ -494,26 +437,16 @@ This action cannot be undone.`;
             {error && (
               <div className="text-red-600 text-sm text-center">
                 {error}
-                {remainingAttempts !== null && remainingAttempts > 0 && (
-                  <div className="mt-1 text-xs">
-                    {remainingAttempts} login attempts remaining
-                  </div>
-                )}
-                {isBlocked && blockedUntil && (
-                  <div className="mt-1 text-xs font-semibold">
-                    Account blocked until {new Date(blockedUntil).toLocaleTimeString()}
-                  </div>
-                )}
               </div>
             )}
 
             <div>
               <button
                 type="submit"
-                disabled={isLoading || isBlocked}
+                disabled={isLoading}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
-                {isLoading ? 'Signing in...' : isBlocked ? 'Account Blocked' : 'Sign in'}
+                {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>
@@ -522,9 +455,9 @@ This action cannot be undone.`;
     );
   }
 
-  // CRITICAL SECURITY: Only render admin content when fully authenticated
+  // Only render admin content when fully authenticated
   if (!isFullyAuthenticated) {
-    return null; // This should never happen due to the earlier checks, but extra safety
+    return null;
   }
 
   return (
@@ -534,10 +467,9 @@ This action cannot be undone.`;
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <div className="flex space-x-3">
-
               <button
                 onClick={async () => {
-                                    try {
+                  try {
                     const response = await fetch('/api/admin/test-submission', { 
                       method: 'POST',
                       headers: {
