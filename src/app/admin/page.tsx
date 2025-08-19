@@ -119,11 +119,14 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.token) {
+          console.log('Login successful, setting token:', data.token);
           setAuthToken(data.token);
           setIsAuthenticated(true);
           localStorage.setItem('adminToken', data.token);
           // Fetch data immediately after setting authentication state
+          console.log('Calling fetchSubmissions with token:', data.token);
           fetchSubmissions(data.token);
+          console.log('Calling fetchUsers with token:', data.token);
           fetchUsers(data.token);
         } else {
           setError('Login failed');

@@ -50,7 +50,10 @@ export async function adminAuthMiddleware(request: NextRequest): Promise<NextRes
   try {
     // Get authorization header
     const authHeader = request.headers.get('authorization');
+    console.log('Middleware: authHeader received:', authHeader ? 'yes' : 'no');
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('Middleware: Invalid auth header format');
       return NextResponse.json(
         { error: 'Authorization header required' },
         { status: 401 }
@@ -58,9 +61,12 @@ export async function adminAuthMiddleware(request: NextRequest): Promise<NextRes
     }
     
     const token = authHeader.substring(7);
+    console.log('Middleware: token extracted, length:', token?.length);
     
     // Simple token validation - just check if it matches the password
     const adminPassword = getAdminPassword();
+    console.log('Middleware: adminPassword loaded:', adminPassword ? 'yes' : 'no');
+    
     if (!adminPassword) {
       console.error('ADMIN_PASSWORD environment variable not set in middleware');
       return NextResponse.json(
@@ -69,7 +75,9 @@ export async function adminAuthMiddleware(request: NextRequest): Promise<NextRes
       );
     }
 
+    console.log('Middleware: token comparison - token === adminPassword:', token === adminPassword);
     if (token !== adminPassword) {
+      console.log('Middleware: Token validation failed');
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
