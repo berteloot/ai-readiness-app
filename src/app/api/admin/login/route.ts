@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
     
     const { password } = await request.json();
     console.log('Password received, length:', password?.length);
+    console.log('Password received (first 100 chars):', password?.substring(0, 100));
+    console.log('Password received (last 100 chars):', password?.substring(Math.max(0, password?.length - 100));
     
     if (!password) {
       console.log('No password provided');

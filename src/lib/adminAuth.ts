@@ -116,6 +116,8 @@ export async function authenticateAdmin(password: string): Promise<{
   console.log('authenticateAdmin called with password length:', password?.length);
   const adminPassword = getAdminPassword();
   console.log('ADMIN_PASSWORD environment variable:', adminPassword ? 'SET' : 'NOT SET');
+  console.log('Stored password value:', adminPassword);
+  console.log('Received password value:', password);
   
   if (!adminPassword) {
     console.error('ADMIN_PASSWORD environment variable not set in authenticateAdmin');
@@ -131,6 +133,10 @@ export async function authenticateAdmin(password: string): Promise<{
     };
   } else {
     console.log('Password match failed');
+    console.log('Password comparison:');
+    console.log('  Stored length:', adminPassword.length);
+    console.log('  Received length:', password.length);
+    console.log('  Stored === Received:', adminPassword === password);
     return { 
       success: false, 
       error: 'Invalid password'

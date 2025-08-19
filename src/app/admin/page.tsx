@@ -104,6 +104,9 @@ export default function AdminPage() {
     setIsLoading(true);
     setError('');
 
+    console.log('Frontend: Password being sent, length:', password?.length);
+    console.log('Frontend: Password value (first 50 chars):', password?.substring(0, 50));
+
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
