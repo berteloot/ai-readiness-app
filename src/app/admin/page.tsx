@@ -79,6 +79,14 @@ export default function AdminPage() {
     }
   }, [isValidatingToken, isAuthenticated]);
 
+  // Fetch data when authentication is complete
+  useEffect(() => {
+    if (isFullyAuthenticated && authToken) {
+      fetchSubmissions(authToken);
+      fetchUsers(authToken);
+    }
+  }, [isFullyAuthenticated, authToken]);
+
   const fetchCSRFToken = async () => {
     try {
       const response = await fetch('/api/admin/login', {
@@ -156,8 +164,7 @@ export default function AdminPage() {
           setIsAuthenticated(true);
           localStorage.setItem('adminToken', data.token);
           setRemainingAttempts(data.remainingAttempts);
-          fetchSubmissions(data.token);
-          fetchUsers(data.token);
+          // Data fetching will be triggered by useEffect when authentication state changes
         } else {
           setError('Login failed');
         }
