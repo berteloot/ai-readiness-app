@@ -192,13 +192,17 @@ export default function AdminPage() {
     const currentToken = token || authToken;
     if (!currentToken) return;
     
+    console.log('fetchUsers - token param:', token ? 'provided' : 'not provided');
+    console.log('fetchUsers - authToken:', authToken ? 'set' : 'not set');
+    console.log('fetchUsers - currentToken:', currentToken ? 'set' : 'not set');
+    
     setIsLoadingUsers(true);
     setError('');
     try {
       console.log('Fetching users...');
       const response = await fetch('/api/admin/users', {
         headers: {
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${currentToken}`
         }
       });
       console.log('Users API response status:', response.status);
