@@ -49,6 +49,7 @@ export default function AdminPage() {
   const [isDeletingUsers, setIsDeletingUsers] = useState(false);
   const [error, setError] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'submissions' | 'users'>('submissions');
   const router = useRouter();
 
@@ -241,6 +242,7 @@ export default function AdminPage() {
     setSubmissions([]);
     setUsers([]);
     setSelectedUsers(new Set());
+    setSelectedSubmissions(new Set());
   };
 
   const handleUserSelection = (userId: string) => {
@@ -251,6 +253,24 @@ export default function AdminPage() {
       newSelected.add(userId);
     }
     setSelectedUsers(newSelected);
+  };
+
+  const handleSubmissionSelection = (submissionId: string) => {
+    const newSelected = new Set(selectedSubmissions);
+    if (newSelected.has(submissionId)) {
+      newSelected.delete(submissionId);
+    } else {
+      newSelected.add(submissionId);
+    }
+    setSelectedSubmissions(newSelected);
+  };
+
+  const handleSelectAllSubmissions = () => {
+    if (selectedSubmissions.size === submissions.length) {
+      setSelectedSubmissions(new Set());
+    } else {
+      setSelectedSubmissions(new Set(submissions.map(submission => submission.id)));
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent, userId: string) => {
@@ -360,7 +380,11 @@ This action cannot be undone.`;
   };
 
   const downloadCSV = () => {
-    if (submissions.length === 0) return;
+    const submissionsToExport = selectedSubmissions.size > 0 
+      ? submissions.filter(submission => selectedSubmissions.has(submission.id))
+      : submissions;
+    
+    if (submissionsToExport.length === 0) return;
 
     const headers = [
       'Date',
@@ -375,7 +399,7 @@ This action cannot be undone.`;
 
     const csvContent = [
       headers.join(','),
-      ...submissions.map(submission => [
+      ...submissionsToExport.map(submission => [
         new Date(submission.createdAt).toLocaleDateString(),
         submission.user.email,
         submission.company,
@@ -387,15 +411,34 @@ This action cannot be undone.`;
       ].map(field => `"${field}"`).join(','))
     ].join('\n');
 
+    const fileName = selectedSubmissions.size > 0 
+      ? `ai-readiness-selected-submissions-${selectedSubmissions.size}-${new Date().toISOString().split('T')[0]}.csv`
+      : `ai-readiness-all-submissions-${new Date().toISOString().split('T')[0]}.csv`;
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ai-readiness-submissions-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  };
+
+  const sendEmailsToSelected = async () => {
+    if (selectedSubmissions.size === 0) return;
+    
+    const confirmationMessage = `Are you sure you want to send emails to ${selectedSubmissions.size} selected submission(s)?
+
+This will send AI readiness reports to the selected contacts.`;
+    
+    if (!confirm(confirmationMessage)) {
+      return;
+    }
+
+    // TODO: Implement email sending logic
+    alert(`Email sending functionality will be implemented here. ${selectedSubmissions.size} submissions selected.`);
   };
 
   // Show loading state while validating token
@@ -515,8 +558,9 @@ This action cannot be undone.`;
               <button
                 onClick={downloadCSV}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                title={selectedSubmissions.size > 0 ? `Download ${selectedSubmissions.size} selected submissions` : 'Download all submissions'}
               >
-                Download CSV
+                {selectedSubmissions.size > 0 ? `Download CSV (${selectedSubmissions.size})` : 'Download CSV'}
               </button>
               <button
                 onClick={handleLogout}
@@ -557,12 +601,46 @@ This action cannot be undone.`;
           {activeTab === 'submissions' && (
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
               <div className="px-4 py-5 sm:px-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Submissions ({submissions.length})
-                </h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                  All AI readiness assessment submissions
-                </p>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Submissions ({submissions.length})
+                    </h3>
+                    <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                      All AI readiness assessment submissions
+                    </p>
+                    {selectedSubmissions.size > 0 && (
+                      <div className="mt-2 text-sm text-indigo-600">
+                        <span className="font-medium">{selectedSubmissions.size}</span> submission{selectedSubmissions.size === 1 ? '' : 's'} selected
+                      </div>
+                    )}
+                  </div>
+                  {selectedSubmissions.size > 0 && (
+                    <div className="flex items-center space-x-4">
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">{selectedSubmissions.size}</span> submission{selectedSubmissions.size === 1 ? '' : 's'} selected
+                      </div>
+                      <button
+                        onClick={() => setSelectedSubmissions(new Set())}
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                      >
+                        <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Clear Selection
+                      </button>
+                      <button
+                        onClick={sendEmailsToSelected}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                      >
+                        <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Send Emails ({selectedSubmissions.size})
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {isLoadingSubmissions ? (
@@ -586,9 +664,29 @@ This action cannot be undone.`;
                 </div>
               ) : (
                 <div className="overflow-x-auto">
+                  <div className="px-6 py-2 bg-gray-50 border-b border-gray-200">
+                    <p className="text-xs text-gray-500">
+                      💡 <strong>Tip:</strong> Use checkboxes to select submissions for email sending or CSV export
+                    </p>
+                  </div>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <div className="flex items-center">
+                            <input
+                              id="select-all-submissions"
+                              type="checkbox"
+                              checked={selectedSubmissions.size === submissions.length && submissions.length > 0}
+                              onChange={handleSelectAllSubmissions}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-2"
+                              aria-label="Select all submissions"
+                            />
+                            <label htmlFor="select-all-submissions" className="sr-only">
+                              Select all submissions
+                            </label>
+                          </div>
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Date
                         </th>
@@ -611,7 +709,42 @@ This action cannot be undone.`;
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {submissions.map((submission) => (
-                        <tr key={submission.id} className="hover:bg-gray-50">
+                        <tr 
+                          key={submission.id} 
+                          className={`hover:bg-gray-50 transition-colors cursor-pointer ${
+                            selectedSubmissions.has(submission.id) 
+                              ? 'bg-indigo-50 border-l-4 border-l-indigo-500' 
+                              : ''
+                          }`}
+                          onClick={() => handleSubmissionSelection(submission.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSubmissionSelection(submission.id);
+                            }
+                          }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`Select submission from ${submission.user.email} (currently ${selectedSubmissions.has(submission.id) ? 'selected' : 'not selected'})`}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <input
+                                id={`submission-${submission.id}`}
+                                type="checkbox"
+                                checked={selectedSubmissions.has(submission.id)}
+                                onChange={() => handleSubmissionSelection(submission.id)}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-2 hover:border-indigo-400 transition-colors"
+                                aria-label={`Select submission from ${submission.user.email}`}
+                              />
+                              <label htmlFor={`submission-${submission.id}`} className="sr-only">
+                                Select submission from {submission.user.email}
+                              </label>
+                              {selectedSubmissions.has(submission.id) && (
+                                <div className="ml-2 w-2 h-2 bg-indigo-500 rounded-full"></div>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {new Date(submission.createdAt).toLocaleDateString()}
                           </td>
