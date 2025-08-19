@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
         // Set secure session cookie
         response.cookies.set('admin_session', result.token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
+          secure: false, // Temporarily disable secure for debugging
+          sameSite: 'lax', // Temporarily change to lax for debugging
           maxAge: 24 * 60 * 60, // 24 hours
           path: '/'
         });
@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
       // Set CSRF token in httpOnly cookie
       response.cookies.set('admin_csrf', csrfToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: false, // Temporarily disable secure for debugging
+        sameSite: 'lax', // Temporarily change to lax for debugging
         maxAge: 15 * 60, // 15 minutes
         path: '/'
       });
@@ -164,8 +164,8 @@ export async function GET(request: NextRequest) {
     // Set CSRF token in httpOnly cookie
     response.cookies.set('admin_csrf', csrfToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: false, // Temporarily disable secure for debugging
+      sameSite: 'lax', // Temporarily change to lax for debugging
       maxAge: 15 * 60, // 15 minutes
       path: '/'
     });
