@@ -188,7 +188,8 @@ export default function AdminPage() {
 
   const fetchSubmissions = async (token?: string) => {
     // CRITICAL SECURITY: Prevent API calls without proper authentication
-    if (!isFullyAuthenticated) {
+    // But allow calls when token is explicitly passed (for immediate post-login calls)
+    if (!token && !isFullyAuthenticated) {
       console.error('Security violation: Attempted to fetch submissions without authentication');
       return;
     }
@@ -233,7 +234,8 @@ export default function AdminPage() {
 
   const fetchUsers = async (token?: string) => {
     // CRITICAL SECURITY: Prevent API calls without proper authentication
-    if (!isFullyAuthenticated) {
+    // But allow calls when token is explicitly passed (for immediate post-login calls)
+    if (!token && !isFullyAuthenticated) {
       console.error('Security violation: Attempted to fetch users without authentication');
       return;
     }
