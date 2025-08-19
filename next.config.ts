@@ -21,9 +21,7 @@ const nextConfig: NextConfig = {
   },
 
   // Alternative: expose environment variables to the build
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: [],
 };
 
 export default nextConfig;
