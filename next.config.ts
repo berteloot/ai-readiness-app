@@ -14,6 +14,16 @@ const nextConfig: NextConfig = {
     // Temporarily ignore ESLint during builds for deployment
     ignoreDuringBuilds: true,
   },
+
+  // Ensure environment variables are available in API routes
+  env: {
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  },
+
+  // Alternative: expose environment variables to the build
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
 };
 
 export default nextConfig;

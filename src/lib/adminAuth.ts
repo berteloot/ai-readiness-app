@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Simple admin authentication - no complex security protocols
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// Load environment variable dynamically
+function getAdminPassword(): string | undefined {
+  const password = process.env.ADMIN_PASSWORD;
+  console.log('getAdminPassword called, result:', password ? 'SET' : 'NOT SET');
+  return password;
+}
 
 export interface AdminUser {
   id: string;
@@ -13,12 +18,18 @@ export interface AdminUser {
  * Simple password validation
  */
 export function validateAdminPassword(password: string): boolean {
-  if (!ADMIN_PASSWORD) {
+  console.log('validateAdminPassword called with password length:', password?.length);
+  const adminPassword = getAdminPassword();
+  console.log('ADMIN_PASSWORD environment variable:', adminPassword ? 'SET' : 'NOT SET');
+  
+  if (!adminPassword) {
     console.error('ADMIN_PASSWORD environment variable not set');
     return false;
   }
   
-  return password === ADMIN_PASSWORD;
+  const isValid = password === adminPassword;
+  console.log('Password validation result:', isValid);
+  return isValid;
 }
 
 /**
@@ -49,7 +60,16 @@ export async function adminAuthMiddleware(request: NextRequest): Promise<NextRes
     const token = authHeader.substring(7);
     
     // Simple token validation - just check if it matches the password
-    if (token !== ADMIN_PASSWORD) {
+    const adminPassword = getAdminPassword();
+    if (!adminPassword) {
+      console.error('ADMIN_PASSWORD environment variable not set in middleware');
+      return NextResponse.json(
+        { error: 'Admin access not configured' },
+        { status: 500 }
+      );
+    }
+
+    if (token !== adminPassword) {
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
@@ -93,17 +113,24 @@ export async function authenticateAdmin(password: string): Promise<{
   token?: string; 
   error?: string;
 }> {
-  if (!ADMIN_PASSWORD) {
+  console.log('authenticateAdmin called with password length:', password?.length);
+  const adminPassword = getAdminPassword();
+  console.log('ADMIN_PASSWORD environment variable:', adminPassword ? 'SET' : 'NOT SET');
+  
+  if (!adminPassword) {
+    console.error('ADMIN_PASSWORD environment variable not set in authenticateAdmin');
     return { success: false, error: 'Admin access not configured' };
   }
   
-  if (password === ADMIN_PASSWORD) {
+  if (password === adminPassword) {
+    console.log('Password match successful');
     // Return the password as the token (simple approach)
     return { 
       success: true, 
       token: password
     };
   } else {
+    console.log('Password match failed');
     return { 
       success: false, 
       error: 'Invalid password'
