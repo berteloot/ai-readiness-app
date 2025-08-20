@@ -165,7 +165,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto mobile-optimized py-8 sm:py-12">
           <div className="text-center">
             <div className="text-white mb-3 sm:mb-4">
-              <p className="text-base sm:text-lg">AI Readiness Assessment Tool</p>
+              <p className="text-base sm:text-lg">CX - AI Readiness Assessment Tool</p>
               <p className="text-xs sm:text-sm">Powered by Lean Solutions Group</p>
             </div>
             <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs sm:text-sm text-neutral-400">
