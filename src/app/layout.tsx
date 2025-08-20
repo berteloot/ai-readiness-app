@@ -9,7 +9,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'AI Readiness Assessment | Lean Solutions Group',
+  title: 'CX - AI Readiness Assessment | Lean Solutions Group',
   description: 'Assess your organization\'s AI readiness with our comprehensive evaluation tool. Get a personalized report with actionable insights and a roadmap for success.',
   keywords: 'AI readiness, artificial intelligence, digital transformation, assessment, evaluation, Lean Solutions Group',
   authors: [{ name: 'Lean Solutions Group' }],
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   publisher: 'Lean Solutions Group',
   robots: 'index, follow',
   openGraph: {
-    title: 'AI Readiness Assessment | Lean Solutions Group',
+    title: 'CX - AI Readiness Assessment | Lean Solutions Group',
     description: 'Assess your organization\'s AI readiness with our comprehensive evaluation tool.',
     url: 'https://www.leangroup.com/ai-readiness',
     siteName: 'Lean Solutions Group',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Readiness Assessment | Lean Solutions Group',
+    title: 'CX - AI Readiness Assessment | Lean Solutions Group',
     description: 'Assess your organization\'s AI readiness with our comprehensive evaluation tool.',
     images: ['https://www.leangroup.com/opengraph.png'],
     creator: '@LeanGroup',

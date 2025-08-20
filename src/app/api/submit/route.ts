@@ -527,7 +527,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
     <body>
       <div class="container">
         <div class="header">
-          <h1>AI Readiness Assessment Report</h1>
+          <h1>CX - AI Readiness Assessment Report</h1>
           <p>Your personalized analysis and roadmap for AI transformation</p>
         </div>
 
@@ -585,7 +585,7 @@ function generateEmailText(result: ScoreResult, aiReport: string, answers: Answe
     .trim();
 
   return `
-LEAN SOLUTIONS GROUP - AI READINESS ASSESSMENT REPORT
+LEAN SOLUTIONS GROUP - CX - AI READINESS ASSESSMENT REPORT
 ====================================================
 
 Company: ${company}
