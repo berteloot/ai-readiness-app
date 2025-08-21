@@ -89,11 +89,6 @@ Report Structure:
      • One tight paragraph with overall score and tier, where the org is strong vs fragile, and what that means in practice.
      • Benchmark comparison with at most two stats, each cited with organization + report/publication name (2023+).
      • Limitations & Assumptions: call out missing sector or region and any other input gaps.
-     • Confidence Meter: High, Medium, or Low, with one-line reason.
-       Guidance:
-         - High: all major claims have 2023+ citations.
-         - Medium: one or two claims lack 2023+ citations.
-         - Low: more than two claims lack 2023+ citations.
 
   2) Readiness Score & Tier Interpretation
      • Total score: ${score.score}/${score.maxScore} (${score.overallPct}%).

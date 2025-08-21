@@ -196,7 +196,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
                   />
                 </div>
                 <div className="mt-3 text-xs text-neutral-500 text-center">
-                  Full report has been sent to your email
+                  A copy of this report has been sent to your email.
                 </div>
               </div>
             )}
