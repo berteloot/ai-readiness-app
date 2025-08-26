@@ -307,9 +307,9 @@ export async function POST(request: NextRequest) {
 
 function mapTier(tier: string): 'NOT_READY' | 'GETTING_STARTED' | 'AI_ENHANCED' {
   switch (tier) {
-    case 'Not Ready Yet':
+    case 'Foundation Stage':
       return 'NOT_READY';
-    case 'Getting Started':
+    case 'Developing':
       return 'GETTING_STARTED';
     case 'AI-Enhanced':
       return 'AI_ENHANCED';
@@ -630,12 +630,12 @@ function getSectionName(key: string): string {
 
 function getMaxScore(key: string): number {
   const maxScores: Record<string, number> = {
-    s1: 8,
+    s1: 16,
     s2: 4,
     s3: 4,
     s4: 4,
-    s5: 5,
-    s6: 6,
+    s5: 9,
+    s6: 12,
     s7: 4
   };
   return maxScores[key] || 0;

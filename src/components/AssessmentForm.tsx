@@ -345,9 +345,13 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                 <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4 leading-tight">
                   {currentQ.title}
                 </h2>
-                <p className="text-xl text-text-secondary leading-relaxed">
-                  {currentQ.subtitle}
-                </p>
+                <div className="text-xl text-text-secondary leading-relaxed">
+                  {currentQ.subtitle.split('\n').map((line, index) => (
+                    <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
               </div>
 
               <div className="mb-8">{renderQuestion(currentQ)}</div>

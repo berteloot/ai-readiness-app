@@ -2,59 +2,79 @@
 import { ScoreResult, Answers } from "./scoring";
 
 export function buildReportPrompt(score: ScoreResult, answers: Answers) {
-  const joinOrNone = (arr?: string[]) =>
-    Array.isArray(arr) && arr.length ? arr.join(", ") : "none";
+  // Helper functions for consistency, rounding, and sorting
+  const fmtPct = (n: number) => `${Math.round(n)}%`;
+  const safeList = (arr?: string[]) => (Array.isArray(arr) && arr.length ? arr.join(", ") : "not specified");
+
+  // Sort sections by label for stable rendering
+  const sectionsSorted = [...score.sections].sort((a, b) => a.label.localeCompare(b.label));
+
+  // High/low thresholds with clear, non-overlapping boundaries
+  const HIGH_PCT = 75;
+  const LOW_PCT = 50;
+
+  const highSections =
+    score.sections
+      .filter(s => s.pct >= HIGH_PCT)
+      .map(s => `${s.label} ${s.score}/${s.max} (${fmtPct(s.pct)})`)
+      .join("; ") || "not specified";
+
+  const lowSections =
+    score.sections
+      .filter(s => s.pct < LOW_PCT)
+      .map(s => `${s.label} ${s.score}/${s.max} (${fmtPct(s.pct)})`)
+      .join("; ") || "not specified";
+
+  // Section breakdown with sorted + rounding
+  const sectionBreakdownList = sectionsSorted
+    .map(s => `         - ${s.label}: ${s.score}/${s.max} (${fmtPct(s.pct)})`)
+    .join("\n");
 
   // Pretty labels for sector/region values
   const sectorLabelMap: Record<string, string> = {
-    retail: "Retail",
-    financial_services: "Financial Services",
-    telecom: "Telecom",
-    bpo: "BPO / Outsourcing",
+    retail_ecommerce: "Retail & eCommerce",
+    financial_services_fintech: "Financial Services & Fintech",
+    telecommunications: "Telecommunications",
     healthcare: "Healthcare",
+    media_entertainment: "Media & Entertainment",
+    energy_utilities: "Energy & Utilities",
+    logistics_transportation: "Logistics & Transportation",
     manufacturing: "Manufacturing",
-    logistics: "Logistics / Transportation",
-    other: "Other",
+    other: "Other / Not Listed",
   };
   const regionLabelMap: Record<string, string> = {
     na: "North America",
-    emea: "EMEA",
-    apac: "APAC",
-    latam: "LATAM",
-    global: "Global / Mixed",
+    emea: "EMEA (Europe, Middle East & Africa)",
+    apac: "APAC (Asia-Pacific)",
+    latam: "LATAM (Latin America)",
+    global: "Global / Multi-region",
   };
   const sectorLabel = answers.sector ? (sectorLabelMap[answers.sector] || answers.sector) : "not specified";
   const regionLabel = answers.region ? (regionLabelMap[answers.region] || answers.region) : "not specified";
+
+  // Sector/region fallback sentence builder
+  const sectorSpecified = sectorLabel !== "not specified";
+  const regionSpecified = regionLabel !== "not specified";
+  const noSpecificBenchmarkNote = !sectorSpecified && !regionSpecified
+    ? "No sector or region-specific benchmark found; using cross-industry reference."
+    : sectorSpecified && !regionSpecified
+      ? "No region-specific benchmark found; using sector reference."
+      : !sectorSpecified && regionSpecified
+        ? "No sector-specific benchmark found; using region reference."
+        : ""; // both specified, no note
 
   const painPoints =
     Array.isArray(answers.q8) && answers.q8.length ? answers.q8.join(", ") : "not specified";
 
   const urgency = answers.q9 || "not specified";
 
-  // High / Low sections via aligned labels from scoring.ts
-  const highSections =
-    score.sections
-      .filter(s => s.pct >= 75)
-      .map(s => `${s.label} ${s.score}/${s.max} (${s.pct}%)`)
-      .join("; ") || "none";
-
-  const lowSections =
-    score.sections
-      .filter(s => s.pct <= 50)
-      .map(s => `${s.label} ${s.score}/${s.max} (${s.pct}%)`)
-      .join("; ") || "none";
-
-  // Section breakdown list using aligned labels
-  const sectionBreakdownList = score.sections
-    .map(s => `         - ${s.label}: ${s.score}/${s.max} (${s.pct}%)`)
-    .join("\n");
-
   return `
 Critical Rule:
   • Never fabricate statistics, quotes, or information.
   • Use only verifiable data from reputable sources.
   • Statistics and benchmarks must be from 2023 or newer. Foundational frameworks older than 2023 may be cited only if still standard and named.
-  • Approved organizations include: McKinsey, Gartner, Deloitte, PwC, Accenture, Forrester, World Economic Forum, OECD, MIT Technology Review, Harvard Business Review, Stanford AI Index, or equivalent of similar caliber.
+  • Do not include personal names, emails, or company identifiers unless provided in Inputs.
+  • Preferred organizations include (not limited to): McKinsey, Gartner, Deloitte, PwC, Accenture, Forrester, World Economic Forum, OECD, MIT Technology Review, Harvard Business Review, Stanford AI Index, or equivalent of similar caliber. Use 2023+ publications when citing quantitative claims.
 
 Citation Requirements (strict):
   • When citing, include the organization AND the exact report/publication name and year if available (e.g., "McKinsey — The State of AI in 2024", 2024).
@@ -67,7 +87,7 @@ Citation Requirements (strict):
 
 Sector & Region Benchmarking:
   • Prefer sector-specific (${sectorLabel}) and region-specific (${regionLabel}) data when selecting benchmarks and vignettes.
-  • If sector- or region-specific data is not available, explicitly write: "No ${sectorLabel !== "not specified" ? "sector" : ""}${sectorLabel !== "not specified" && regionLabel !== "not specified" ? "/" : ""}${regionLabel !== "not specified" ? "region" : ""}-specific benchmark found; using cross-industry reference."
+  • ${noSpecificBenchmarkNote}
   • Avoid mixing sectors or regions in a way that confuses applicability. Make applicability explicit.
 
 Style & Evidence Rules:
@@ -76,10 +96,11 @@ Style & Evidence Rules:
   • Use at most one quantified stat per section. Executive Summary may include two.
   • Do not use phrases like "up to X%", "~X%", or "Yx more likely" unless they appear exactly in a 2023+ cited report/publication.
   • Provide at least two sections that use a brief qualitative vignette from a cited report/publication instead of a percentage.
-  • Do not cite the same organization in consecutive sections if another credible 2023+ source exists. Avoid using any single organization more than twice across the whole report.
+  • Avoid citing the same organization in consecutive sections when a comparable source exists. Prioritize accuracy over variety.
   • End each section with one line: "If unchanged: ...".
   • For sections scoring ≥75%, the "If unchanged" line should state what to preserve and the risk of backsliding.
   • Recommendations must tie only to sections or pain points with a direct causal link.
+  • Prioritize CX-specific outcomes and metrics (CSAT, AHT, FCR, NPS, agent productivity, retention, cost per contact) when relevant to the analysis.
 
 Task:
   Generate a report grounded in current, verifiable research with varied narrative. Use the inputs below exactly.
@@ -88,10 +109,11 @@ Report Structure:
   1) Executive Summary
      • One tight paragraph with overall score and tier, where the org is strong vs fragile, and what that means in practice.
      • Benchmark comparison with at most two stats, each cited with organization + report/publication name (2023+).
+     • Include a brief line connecting readiness to CX outcomes (CSAT, AHT, retention, cost per contact).
      • Limitations & Assumptions: call out missing sector or region and any other input gaps.
 
   2) Readiness Score & Tier Interpretation
-     • Total score: ${score.score}/${score.maxScore} (${score.overallPct}%).
+     • Total score: ${score.score}/${score.maxScore} (${fmtPct(score.overallPct)}).
      • Tier: ${score.tier}.
      • Tier adjustment note: ${score.notes?.tierAdjustedDueToLowDataMaturity ? "Adjusted due to low data maturity" : "No adjustment"}.
      • Section scores:
@@ -106,6 +128,8 @@ ${sectionBreakdownList}
      • Treat high-scoring sections as "preserve and guard against backsliding": ${highSections}.
      • Treat low-scoring sections as priority fixes: ${lowSections}.
      • Reference sections by their labels exactly as listed above (do not use codes like S1).
+     • Add a short line tying readiness scores to CX outcomes leaders care about (CSAT, AHT, retention, cost per contact).
+     • Include CX-specific KPI messaging where relevant, especially around metrics like FCR, NPS, and agent productivity.
 
   4) Pain Points Analysis
      • Reflect the selected pain points: ${painPoints}.
@@ -119,6 +143,8 @@ ${sectionBreakdownList}
        - Tied scores/pains with a direct link (for example: "Addresses Data Foundation and Measurement & Analytics; pain: SLA misses").
        - Evidence: one 2023+ report/publication (organization + title; no URLs).
        - Expected benefit or leading indicator to watch.
+     • Benchmark the maturity tier with a quick reference to peer standing (e.g., "${score.score}/${score.maxScore} places you in ${score.tier}. Consistent with many mid-market CX orgs early in their AI adoption.").
+     • Close with a CTA, such as a link to book a consult or explore tailored recommendations.
 
   6) Sources
      • List each organization once, with the report/publication name(s) and year(s) used, e.g.:
@@ -141,15 +167,15 @@ Tone:
 Inputs:
   • Sector: ${sectorLabel}
   • Region: ${regionLabel}
-  • Current tools (Q1): ${joinOrNone(answers.q1)}
-  • Data maturity (Q2): ${answers.q2 || "not specified"}
-  • Workforce readiness (Q3): ${answers.q3 || "not specified"}
-  • Scalability (Q4): ${answers.q4 || "not specified"}
-  • KPIs (Q5): ${joinOrNone(answers.q5)}
-  • Security & compliance (Q6): ${joinOrNone(answers.q6)}
-  • Leadership commitment (Q7): ${answers.q7 || "not specified"}
-  • Pain points (Q8): ${painPoints}
-  • Urgency (Q9): ${urgency}
-  • Scoring guide: Max 35; AI-Enhanced / Developing / Foundation Stage.
+  • AI & Automation Tools (Q1): ${safeList(answers.q1)}
+  • Data Infrastructure Maturity (Q2): ${answers.q2 || "not specified"}
+  • Workforce AI Adoption Readiness (Q3): ${answers.q3 || "not specified"}
+  • Scalability of CX Operations (Q4): ${answers.q4 || "not specified"}
+  • KPI Tracking Sophistication (Q5): ${safeList(answers.q5)}
+  • Security & Compliance (Q6): ${safeList(answers.q6)}
+  • Budget & Executive Buy-In (Q7): ${answers.q7 || "not specified"}
+  • Challenges (Q8): ${painPoints}
+  • Urgency Assessment (Q9): ${urgency}
+  • Scoring guide: Max ${score.maxScore}; Tiers: AI-Enhanced / Developing / Foundation Stage.
 `;
 }

@@ -394,7 +394,7 @@ This action cannot be undone.`;
       'Score',
       'Tier',
       'Email Status',
-      'Pain Points',
+              'Challenges',
       'AI Report'
     ];
 

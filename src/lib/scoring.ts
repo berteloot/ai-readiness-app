@@ -15,7 +15,7 @@ export type Answers = {
   q7?: string;   // single
 
   // Non-scored, used for narrative/qualification
-  q8?: string[]; // Pain points (multi)
+  q8?: string[]; // Challenges (multi)
   q9?: string;   // Urgency (single)
 };
 
@@ -89,14 +89,14 @@ export function scoreAnswers(a: Answers): ScoreResult {
     s7: "Organizational Support",     // q7 (leadership/budget)
   } as const;
 
-  // Max points (sum = 35)
-  const maxes = { s1: 8, s2: 4, s3: 4, s4: 4, s5: 5, s6: 6, s7: 4 } as const;
+  // Max points (sum = 53)
+  const maxes = { s1: 16, s2: 4, s3: 4, s4: 4, s5: 9, s6: 12, s7: 4 } as const;
 
   // S1 Technology Infrastructure (automation level)
   const q1Set = new Set(cleanMulti(a.q1));
-  const s1Keys = ["chatbots", "rpa", "ai_assistants", "qa_analytics"];
+  const s1Keys = ["chatbots", "rpa", "ai_assistants", "qa_analytics", "speech_analytics", "virtual_agents", "predictive_analytics", "intent_detection"];
   const s1Raw = s1Keys.reduce((acc, k) => acc + (q1Set.has(k) ? 1 : 0), 0);
-  const s1 = Math.min(s1Raw * 2, maxes.s1); // 2 pts each, cap 8
+  const s1 = Math.min(s1Raw * 2, maxes.s1); // 2 pts each, cap 16
 
   // S2 Data Foundation
   const mapQ2: Record<string, number> = {
@@ -142,7 +142,7 @@ export function scoreAnswers(a: Answers): ScoreResult {
 
   // Aggregate
   const score = s1 + s2 + s3 + s4 + s5 + s6 + s7;
-  const maxScore = Object.values(maxes).reduce((a, b) => a + b, 0); // 35
+  const maxScore = Object.values(maxes).reduce((a, b) => a + b, 0); // 53
   const overallPct = pct(score, maxScore);
 
   const breakdown = { s1, s2, s3, s4, s5, s6, s7 };
@@ -168,8 +168,8 @@ export function scoreAnswers(a: Answers): ScoreResult {
 
   // Tier by percentage (future-proof if you reweight)
   let tier: ScoreResult["tier"];
-  if (overallPct >= 72) tier = "AI-Enhanced";        // ~>= 25/35
-  else if (overallPct >= 43) tier = "Developing";    // ~>= 15/35
+  if (overallPct >= 72) tier = "AI-Enhanced";        // ~>= 38/53
+  else if (overallPct >= 43) tier = "Developing";    // ~>= 23/53
   else tier = "Foundation Stage";
 
   const notes: ScoreResult["notes"] = {};
@@ -193,7 +193,7 @@ export function scoreAnswers(a: Answers): ScoreResult {
   // Red flags to help the writer call out critical gaps
   const redFlags: string[] = [];
   if (s2 === 0) redFlags.push("Data Foundation is 0/4");
-  if (s6 === 0) redFlags.push("Risk Management is 0/6");
+  if (s6 === 0) redFlags.push("Risk Management is 0/12");
   if (s5 === 0) redFlags.push("No KPI tracking");
   if (s7 === 0) redFlags.push("No executive sponsor or budget");
   if (redFlags.length) notes.redFlags = redFlags;

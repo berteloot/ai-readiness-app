@@ -106,10 +106,10 @@ export default function Home() {
               </svg>
             </div>
                         <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary mb-6 sm:mb-8 leading-tight">
-              Evaluate your organization&apos;s readiness for AI transformation in Customer Experience (CX).
+              Bridge the Gap Between Customer Experience (CX) Goals and AI Execution
             </h2>
             <p className="text-lg sm:text-xl text-text-secondary mb-6 sm:mb-8 max-w-3xl mx-auto">
-              Get a personalized report with actionable insights and a roadmap for success.
+              Evaluate your readiness across data, tools, and team, and get a personalized report with actionable insights and a roadmap to turn vision into results.
             </p>            
             {/* Key Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">

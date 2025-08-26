@@ -164,7 +164,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
                 <div className="text-4xl font-bold text-primary-600 mb-2">
                   {typeof result.score === 'number' ? result.score : 'N/A'}
                 </div>
-                <div className="text-lg text-text-secondary mb-2">out of {result.maxScore || 29} points</div>
+                <div className="text-lg text-text-secondary mb-2">out of {result.maxScore || 53} points</div>
                 <div className="text-base text-text-secondary">Total Score</div>
               </div>
               

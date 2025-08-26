@@ -80,7 +80,7 @@ The app includes a secure admin panel at `/admin` that provides:
 - **Secure Access**: Password-protected using `ADMIN_PASSWORD` environment variable
 - **Data Viewing**: Browse all assessment submissions in a table format
 - **CSV Export**: Download submissions data for HubSpot or other CRM imports
-- **Submission Details**: View scores, tiers, pain points, and AI reports
+- **Submission Details**: View scores, tiers, challenges, and AI reports
 
 **Security Note**: Always use a strong, unique password for the admin panel in production.
 
@@ -109,7 +109,7 @@ The assessment covers 9 key areas with a maximum score of 29 points:
 ### **Section 7: Budget & Executive Buy-In (0-4 points)**
 - Leadership commitment, dedicated budget, sponsorship
 
-### **Section 8: Pain Points (Non-scored)**
+### **Section 8: Challenges (Non-scored)**
 - Business challenges and operational issues
 
 ### **Section 9: Urgency Assessment (Non-scored)**
@@ -117,9 +117,9 @@ The assessment covers 9 key areas with a maximum score of 29 points:
 
 ## 🎯 Scoring & Tiers
 
-- **AI-Enhanced (21-29 points)**: Ready for advanced AI implementation
-- **Getting Started (11-20 points)**: Good foundation, needs some improvements
-- **Not Ready Yet (0-10 points)**: Requires foundational work before AI adoption
+- **AI-Enhanced (38+ points)**: Ready for advanced AI implementation
+- **Developing (23-37 points)**: Good foundation, needs some improvements
+- **Foundation Stage (0-22 points)**: Requires foundational work before AI adoption
 
 ## 🔧 Development
 

@@ -50,7 +50,7 @@ The admin panel at `/admin` provides:
 - Secure password-protected access
 - View all submissions in a table format
 - Download all submissions as CSV
-- Includes: date, email, company, score, tier, email status, pain points, AI report
+- Includes: date, email, company, score, tier, email status, challenges, AI report
 - Perfect for HubSpot contact import
 
 **Important**: Set the `ADMIN_PASSWORD` environment variable in Render to secure access to the admin panel.
