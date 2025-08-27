@@ -202,22 +202,34 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
             )}
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border-default">
-              <button
-                onClick={onClose}
-                className="flex-1 btn-secondary"
+            <div className="flex flex-col gap-4 pt-6 border-t border-border-default">
+              {/* Learn More Button */}
+              <a
+                href="https://www.leangroup.com/contact"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 btn-primary text-center"
               >
-                Close
-              </button>
-              {onStartOver && (
+                Learn More
+              </a>
+              
+              {/* Close and Start Over Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={onStartOver}
-                  className="flex-1 btn-accent"
+                  onClick={onClose}
+                  className="flex-1 btn-secondary"
                 >
-                  Start Over
+                  Close
                 </button>
-              )}
-
+                {onStartOver && (
+                  <button
+                    onClick={onStartOver}
+                    className="flex-1 btn-accent"
+                  >
+                    Start Over
+                  </button>
+                )}
+              </div>
             </div>
           </>
         )}
