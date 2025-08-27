@@ -77,13 +77,13 @@ export function buildReportPrompt(score: ScoreResult, answers: Answers) {
     | "Agent productivity";
 
   const sectionKpiMap: Record<string, Kpi[]> = {
-    "Strategy & Governance": ["Retention", "NPS"],
+    "Technology Infrastructure": ["AHT", "Cost per contact", "CSAT"],
     "Data Foundation": ["AHT", "Cost per contact", "FCR"],
+    "Human Capital": ["Agent productivity", "CSAT", "FCR"],
+    "Strategic Planning": ["Cost per contact", "FCR", "Agent productivity"],
     "Measurement & Analytics": ["FCR", "NPS", "Cost per contact"],
-    "Workforce Readiness": ["Agent productivity", "CSAT", "FCR"],
-    "Automation & Tooling": ["AHT", "Cost per contact", "CSAT"],
-    "Security & Compliance": ["Retention"],
-    "Operations & Scalability": ["Cost per contact", "FCR", "Agent productivity"],
+    "Risk Management": ["Retention"],
+    "Organizational Support": ["Retention", "NPS"],
   };
 
   function buildCxOutcomeLine(sections: ScoreResult["sections"]): string {

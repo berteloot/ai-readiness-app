@@ -17,12 +17,12 @@ const submitRequestSchema = z.object({
   region: z.string().optional(),
   
   // Assessment questions
-  q1: z.array(z.string()).min(1, 'At least one selection required').max(5, 'Too many selections'),
+  q1: z.array(z.string()).min(1, 'At least one selection required').max(8, 'Too many selections'),
   q2: z.string().min(1, 'Please select an option'),
   q3: z.string().min(1, 'Please select an option'),
   q4: z.string().min(1, 'Please select an option'),
-  q5: z.array(z.string()).min(1, 'At least one selection required').max(6, 'Too many selections'),
-  q6: z.array(z.string()).min(1, 'At least one selection required').max(4, 'Too many selections'),
+  q5: z.array(z.string()).min(1, 'At least one selection required').max(9, 'Too many selections'),
+  q6: z.array(z.string()).min(1, 'At least one selection required').max(6, 'Too many selections'),
   q7: z.string().min(1, 'Please select an option'),
   q8: z.array(z.string()).min(1, 'At least one selection required').max(3, 'Too many selections'),
   q9: z.string().min(1, 'Please select an option'),
