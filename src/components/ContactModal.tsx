@@ -5,10 +5,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { convertMarkdownToSafeHTML } from '@/lib/sanitizer';
 
-
+// Blocked email domains to prevent generic/personal emails
+const blockedDomains = [
+  'gmail.com',
+  'yahoo.com',
+  'hotmail.com',
+  'outlook.com',
+  'aol.com',
+  'icloud.com'
+];
 
 const contactSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string()
+    .email('Please enter a valid email address')
+    .refine((val) => {
+      const domain = val.split('@')[1]?.toLowerCase();
+      return domain && !blockedDomains.includes(domain);
+    }, { message: 'Please use your company email address' }),
   company: z.string().min(1, 'Please enter your company name'),
   consent: z.boolean().refine(val => val === true, 'You must consent to receive your report'),
 });
@@ -70,23 +83,30 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-text-primary mb-2">Get Your Report</h3>
-              <p className="text-text-secondary">Enter your details to receive your AI Readiness report</p>
-              
+              <p className="text-text-secondary">Enter your business details to receive your AI Readiness report</p>
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  <strong>Note:</strong> Please use your company email address. Personal email addresses (Gmail, Yahoo, etc.) are not accepted.
+                </p>
+              </div>
 
             </div>
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-text-secondary mb-2">
-                  Email Address
+                  Company Email Address <span className="text-red-500">*</span>
                 </label>
                 <input
                   {...register('email')}
                   type="email"
                   id="email"
                   className="w-full px-4 py-3 border border-neutral-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-lg transition-all duration-200"
-                  placeholder="your@email.com"
+                  placeholder="your.name@company.com"
                 />
+                <div className="mt-2 text-xs text-gray-500">
+                  Use your work email address (e.g., john.smith@acmecorp.com)
+                </div>
                 {errors.email && (
                   <div className="mt-2">
                     <p className="text-sm text-error">{errors.email.message}</p>
@@ -97,14 +117,14 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
 
               <div>
                 <label htmlFor="company" className="block text-sm font-semibold text-text-secondary mb-2">
-                  Company Name
+                  Company Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   {...register('company')}
                   type="text"
                   id="company"
                   className="w-full px-4 py-3 border border-border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-lg transition-all duration-200"
-                  placeholder="Your Company"
+                  placeholder="Acme Corporation"
                 />
                 {errors.company && (
                   <p className="mt-2 text-sm text-error">{errors.company.message}</p>
