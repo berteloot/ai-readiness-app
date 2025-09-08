@@ -8,7 +8,30 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Lean Solutions Group brand colors
+        // LSG Brand Colors - Primary blues
+        'lean-blue': '#0099ff',
+        'momentum-blue': '#006ef2',
+        'trust-navy': '#002e66',
+        'midnight-core': '#001f38',
+
+        // LSG Brand Colors - Neutrals
+        'soft-slate': '#e2e9ea',
+        'paper-offwhite': '#f5f5f7',
+        'altitude-white': '#e3e8eb',
+
+        // LSG Brand Colors - Accents
+        'lavender-mist': '#a3a6fa',
+        'aqua-breeze': '#abe8e5',
+        'solar-orange': '#ff8221',
+        'sandstone': '#d6d1bd',
+
+        // LSG Brand Colors - Night accents
+        'lavender-mist-night': '#170a47',
+        'aqua-breeze-night': '#0a3847',
+        'solar-orange-night': '#450d0a',
+        'sandstone-night': '#452e0a',
+
+        // Legacy colors for backward compatibility
         primary: {
           50: '#e9f0fb',
           100: '#d3e1f7',
@@ -20,7 +43,7 @@ module.exports = {
           700: '#184383',
           800: '#112e59',
           900: '#0b203d',
-          DEFAULT: '#1f58ad',
+          DEFAULT: '#0099ff', // Updated to lean-blue
         },
         accent: {
           50: '#fff2e8',
@@ -33,7 +56,7 @@ module.exports = {
           700: '#9e4514',
           800: '#73310e',
           900: '#4f2109',
-          DEFAULT: '#f5721f',
+          DEFAULT: '#ff8221', // Updated to solar-orange
         },
         success: '#1f9d55',
         warning: '#f59e0b',
@@ -68,12 +91,11 @@ module.exports = {
           default: '#dfe5ef',
           strong: '#c8d1e0',
         },
-
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-        heading: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-        body: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['FormaDJR', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        heading: ['FormaDJR', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        body: ['FormaDJR', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       borderRadius: {

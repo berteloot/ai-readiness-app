@@ -1,0 +1,275 @@
+/* LSG Motion Principles - Animation Primitives */
+
+/* Reveal Animation - Gentle downward reveal */
+@keyframes lsg-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lsg-reveal {
+  animation: lsg-reveal var(--duration-normal) var(--ease-ease-out);
+}
+
+/* Emphasize Animation - Subtle scale emphasis */
+@keyframes lsg-emphasize {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.lsg-emphasize {
+  animation: lsg-emphasize var(--duration-normal) var(--ease-ease-in-out);
+}
+
+/* Volume Animation - Volumetric 3D flip effect */
+@keyframes lsg-volume {
+  0% {
+    transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: perspective(1000px) rotateX(10deg) rotateY(5deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+  }
+}
+
+.lsg-volume {
+  animation: lsg-volume var(--duration-slow) var(--ease-ease-in-out);
+}
+
+/* Hover states with motion */
+.lsg-hover-reveal:hover {
+  animation: lsg-reveal var(--duration-fast) var(--ease-ease-out);
+}
+
+.lsg-hover-emphasize:hover {
+  animation: lsg-emphasize var(--duration-fast) var(--ease-ease-in-out);
+}
+
+.lsg-hover-volume:hover {
+  animation: lsg-volume var(--duration-normal) var(--ease-ease-in-out);
+}
+
+/* Staggered animations for lists */
+.lsg-stagger > * {
+  animation: lsg-reveal var(--duration-normal) var(--ease-ease-out);
+  animation-fill-mode: both;
+}
+
+.lsg-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.lsg-stagger > *:nth-child(2) { animation-delay: 100ms; }
+.lsg-stagger > *:nth-child(3) { animation-delay: 200ms; }
+.lsg-stagger > *:nth-child(4) { animation-delay: 300ms; }
+.lsg-stagger > *:nth-child(5) { animation-delay: 400ms; }
+.lsg-stagger > *:nth-child(6) { animation-delay: 500ms; }
+.lsg-stagger > *:nth-child(7) { animation-delay: 600ms; }
+.lsg-stagger > *:nth-child(8) { animation-delay: 700ms; }
+.lsg-stagger > *:nth-child(9) { animation-delay: 800ms; }
+.lsg-stagger > *:nth-child(10) { animation-delay: 900ms; }
+
+/* Fade animations */
+@keyframes lsg-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes lsg-fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.lsg-fade-in {
+  animation: lsg-fade-in var(--duration-normal) var(--ease-ease-out);
+}
+
+.lsg-fade-out {
+  animation: lsg-fade-out var(--duration-normal) var(--ease-ease-out);
+}
+
+/* Slide animations */
+@keyframes lsg-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lsg-slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lsg-slide-left {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes lsg-slide-right {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.lsg-slide-up {
+  animation: lsg-slide-up var(--duration-normal) var(--ease-ease-out);
+}
+
+.lsg-slide-down {
+  animation: lsg-slide-down var(--duration-normal) var(--ease-ease-out);
+}
+
+.lsg-slide-left {
+  animation: lsg-slide-left var(--duration-normal) var(--ease-ease-out);
+}
+
+.lsg-slide-right {
+  animation: lsg-slide-right var(--duration-normal) var(--ease-ease-out);
+}
+
+/* Scale animations */
+@keyframes lsg-scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lsg-scale-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.lsg-scale-in {
+  animation: lsg-scale-in var(--duration-normal) var(--ease-ease-out);
+}
+
+.lsg-scale-out {
+  animation: lsg-scale-out var(--duration-normal) var(--ease-ease-out);
+}
+
+/* Pulse animation for loading states */
+@keyframes lsg-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.lsg-pulse {
+  animation: lsg-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Bounce animation for attention-grabbing elements */
+@keyframes lsg-bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -30px, 0);
+  }
+  70% {
+    transform: translate3d(0, -15px, 0);
+  }
+  90% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+.lsg-bounce {
+  animation: lsg-bounce 1s infinite;
+}
+
+/* Shake animation for error states */
+@keyframes lsg-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-10px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(10px);
+  }
+}
+
+.lsg-shake {
+  animation: lsg-shake 0.5s ease-in-out;
+}
+
+/* Transition utilities */
+.lsg-transition {
+  transition: all var(--duration-normal) var(--ease-ease-in-out);
+}
+
+.lsg-transition-fast {
+  transition: all var(--duration-fast) var(--ease-ease-in-out);
+}
+
+.lsg-transition-slow {
+  transition: all var(--duration-slow) var(--ease-ease-in-out);
+}
+
+/* Transform utilities */
+.lsg-transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Animation delays */
+.lsg-delay-100 { animation-delay: 100ms; }
+.lsg-delay-200 { animation-delay: 200ms; }
+.lsg-delay-300 { animation-delay: 300ms; }
+.lsg-delay-400 { animation-delay: 400ms; }
+.lsg-delay-500 { animation-delay: 500ms; }
+.lsg-delay-600 { animation-delay: 600ms; }
+.lsg-delay-700 { animation-delay: 700ms; }
+.lsg-delay-800 { animation-delay: 800ms; }
+.lsg-delay-900 { animation-delay: 900ms; }
+.lsg-delay-1000 { animation-delay: 1000ms; }
