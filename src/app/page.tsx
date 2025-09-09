@@ -86,50 +86,50 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background-surface">
+    <div className="min-h-screen bg-paper-offwhite">
       {/* Hero Header */}
-      <div className="bg-white shadow-card border-b border-border-subtle">
+      <div className="bg-white shadow-card border-b border-soft-slate">
         <div className="max-w-4xl mx-auto mobile-optimized py-16 sm:py-20 md:py-28">
           <div className="text-center">
             {/* Lean Solutions Group Logo */}
             <div className="mb-8">
               <img 
-                src="https://cdn.prod.website-files.com/636a549426aa8438b3b45fa8/63861ae0dfd2084587eb343a_LeanSolutions_2021__logo_Color_FA.svg"
+                src="/LSG_Logo_Horizontal_RGB_Lean Blue.png"
                 alt="Lean Solutions Group"
                 className="h-16 mx-auto"
               />
             </div>
             
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 primary-gradient rounded-full mb-6 sm:mb-8 shadow-card">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-text-onPrimary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-lean-blue rounded-full mb-6 sm:mb-8 shadow-card lsg-reveal">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary mb-6 sm:mb-8 leading-tight">
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-midnight-core mb-6 sm:mb-8 leading-tight">
               Bridge the Gap Between Customer Experience (CX) Goals and AI Execution
             </h2>
-            <p className="text-lg sm:text-xl text-text-secondary mb-6 sm:mb-8 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-neutral-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
               Evaluate your readiness across data, tools, and team, and get a personalized report with actionable insights and a roadmap to turn vision into results.
             </p>            
             {/* Key Benefits */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
-              <div className="text-center p-4 sm:p-6 bg-background-surface rounded-md shadow-card border border-border-default">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 primary-gradient rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-card">
-                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-text-onPrimary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto lsg-stagger">
+              <div className="text-center p-4 sm:p-6 bg-white rounded-md shadow-card border border-soft-slate lsg-reveal">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-lean-blue rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-card">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <h3 className="font-bold text-text-primary mb-2 sm:mb-3 text-base sm:text-lg">Comprehensive Evaluation</h3>
-                <p className="text-text-secondary text-xs sm:text-sm leading-relaxed">9 key areas covering technology, data, workforce, and strategy</p>
+                <h3 className="font-bold text-midnight-core mb-2 sm:mb-3 text-base sm:text-lg">Comprehensive Evaluation</h3>
+                <p className="text-neutral-600 text-xs sm:text-sm leading-relaxed">9 key areas covering technology, data, workforce, and strategy</p>
               </div>
-              <div className="text-center p-4 sm:p-6 bg-background-surface rounded-md shadow-card border border-border-default">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 accent-gradient rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-card">
-                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-text-onAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center p-4 sm:p-6 bg-white rounded-md shadow-card border border-soft-slate lsg-reveal">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-solar-orange rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-card">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="font-bold text-text-primary mb-2 sm:mb-3 text-base sm:text-lg">Instant Delivery</h3>
-                <p className="text-text-secondary text-xs sm:text-sm leading-relaxed">Detailed report sent directly to your email</p>
+                <h3 className="font-bold text-midnight-core mb-2 sm:mb-3 text-base sm:text-lg">Instant Delivery</h3>
+                <p className="text-neutral-600 text-xs sm:text-sm leading-relaxed">Detailed report sent directly to your email</p>
               </div>
             </div>
           </div>
@@ -160,16 +160,16 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <div className="bg-neutral-900 border-t border-neutral-800 mt-16 sm:mt-20">
+      <div className="bg-midnight-core border-t border-trust-navy mt-16 sm:mt-20">
         <div className="max-w-4xl mx-auto mobile-optimized py-8 sm:py-12">
           <div className="text-center">
             <div className="text-white mb-3 sm:mb-4">
               <p className="text-base sm:text-lg">CX - AI Readiness Assessment Tool</p>
               <p className="text-xs sm:text-sm">Powered by Lean Solutions Group</p>
             </div>
-            <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs sm:text-sm text-neutral-400">
-              <a href="/privacy-policy" className="hover:text-accent-400 transition-colors">Privacy Policy</a>
-              <a href="/terms-of-service" className="hover:text-accent-400 transition-colors">Terms of Service</a>
+            <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs sm:text-sm text-soft-slate">
+              <a href="/privacy-policy" className="hover:text-solar-orange transition-colors">Privacy Policy</a>
+              <a href="/terms-of-service" className="hover:text-solar-orange transition-colors">Terms of Service</a>
             </div>
             <div className="mt-6 text-xs text-neutral-500">
               <p>© 2025 Lean Solutions Group. All rights reserved.</p>

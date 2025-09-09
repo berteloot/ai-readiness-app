@@ -79,12 +79,14 @@ interface CardProps {
   children: React.ReactNode;
   variant?: 'default' | 'elevated' | 'outlined';
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   variant = 'default',
-  className = ''
+  className = '',
+  style
 }) => {
   const variantClasses = {
     default: 'bg-white border border-soft-slate',
@@ -99,6 +101,7 @@ export const Card: React.FC<CardProps> = ({
         ${variantClasses[variant]}
         ${className}
       `}
+      style={style}
     >
       {children}
     </div>

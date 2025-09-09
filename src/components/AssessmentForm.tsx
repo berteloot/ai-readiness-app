@@ -170,7 +170,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
       case 'multi':
         return (
           <div className="space-y-4">
-            <div className="question-type-multi mb-6 p-3 rounded-md">
+            <div className="bg-lean-blue/10 border border-lean-blue/20 text-lean-blue mb-6 p-3 rounded-md">
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -187,9 +187,9 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                   <label
                     key={option.value}
                     className={`
-                      relative block p-6 rounded-md border-2 transition-all duration-200 cursor-pointer
-                      ${isSelected ? 'border-primary-500 bg-primary-50 shadow-card'
-                                   : 'border-border-default hover:border-primary-300 hover:shadow-card'}
+                      relative block p-6 rounded-md border-2 transition-all duration-200 cursor-pointer lsg-transition
+                      ${isSelected ? 'border-lean-blue bg-lean-blue/5 shadow-card'
+                                   : 'border-soft-slate hover:border-lean-blue hover:shadow-card'}
                     `}
                   >
                     <input
@@ -209,12 +209,12 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                       <div
                         className={`
                           flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center
-                          ${isSelected ? 'border-primary-500 bg-primary-500'
-                                       : 'border-border-default'}
+                          ${isSelected ? 'border-lean-blue bg-lean-blue'
+                                       : 'border-soft-slate'}
                         `}
                       >
                         {isSelected && (
-                          <svg className="w-4 h-4 text-text-onPrimary" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
                               d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -224,11 +224,11 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                         )}
                       </div>
                       <div className="flex-1">
-                        <div className="font-semibold text-text-primary text-lg mb-2">
+                        <div className="font-semibold text-midnight-core text-lg mb-2">
                           {option.label}
                         </div>
                         {option.description && (
-                          <div className="text-text-secondary text-base leading-relaxed">
+                          <div className="text-neutral-600 text-base leading-relaxed">
                             {option.description}
                           </div>
                         )}
@@ -244,7 +244,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
       case 'single':
         return (
           <div className="space-y-4">
-            <div className="question-type-single mb-6 p-3 rounded-md">
+            <div className="bg-solar-orange/10 border border-solar-orange/20 text-solar-orange mb-6 p-3 rounded-md">
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -260,9 +260,9 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                   <label
                     key={option.value}
                     className={`
-                      relative block p-6 rounded-md border-2 transition-all duration-200 cursor-pointer
-                      ${isSelected ? 'border-accent-500 bg-accent-50 shadow-card'
-                                   : 'border-border-default hover:border-accent-300 hover:shadow-card'}
+                      relative block p-6 rounded-md border-2 transition-all duration-200 cursor-pointer lsg-transition
+                      ${isSelected ? 'border-solar-orange bg-solar-orange/5 shadow-card'
+                                   : 'border-soft-slate hover:border-solar-orange hover:shadow-card'}
                     `}
                   >
                     <input
@@ -276,18 +276,18 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                       <div
                         className={`
                           flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
-                          ${isSelected ? 'border-accent-500 bg-accent-500'
-                                       : 'border-border-default'}
+                          ${isSelected ? 'border-solar-orange bg-solar-orange'
+                                       : 'border-soft-slate'}
                         `}
                       >
-                        {isSelected && <div className="w-3 h-3 bg-text-onAccent rounded-full" />}
+                        {isSelected && <div className="w-3 h-3 bg-white rounded-full" />}
                       </div>
                       <div className="flex-1">
-                        <div className="font-semibold text-text-primary text-lg mb-2">
+                        <div className="font-semibold text-midnight-core text-lg mb-2">
                           {option.label}
                         </div>
                         {option.description && (
-                          <div className="text-text-secondary text-base leading-relaxed">
+                          <div className="text-neutral-600 text-base leading-relaxed">
                             {option.description}
                           </div>
                         )}
@@ -317,35 +317,35 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
   };
 
   return (
-    <div className="min-h-screen bg-background-surface">
+    <div className="min-h-screen bg-paper-offwhite">
       <div className="pt-12 pb-16">
         <div className="max-w-4xl mx-auto px-6">
           <form onSubmit={handleSubmit(onSubmitClean)} className="space-y-8">
             {/* Progress Bar */}
             <div className="mb-8 progress-section">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-text-secondary">
+                <span className="text-sm font-medium text-neutral-600">
                   Question {currentQuestion + 1} of {questions.length}
                 </span>
-                <span className="text-sm font-medium text-primary-600">
+                <span className="text-sm font-medium text-lean-blue">
                   {Math.round(((currentQuestion + 1) / questions.length) * 100)}% Complete
                 </span>
               </div>
-              <div className="w-full bg-neutral-200 rounded-full h-2">
+              <div className="w-full bg-soft-slate rounded-full h-2">
                 <div
-                  className="primary-gradient h-2 rounded-full transition-all duration-300 ease-out"
+                  className="bg-lean-blue h-2 rounded-full transition-all duration-300 ease-out"
                   style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
                 />
               </div>
             </div>
 
             {/* Question Card */}
-            <div className="question-card">
+            <div className="question-card lsg-reveal">
               <div className="mb-10">
-                <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4 leading-tight">
+                <h2 className="text-3xl md:text-4xl font-bold text-midnight-core mb-4 leading-tight">
                   {currentQ.title}
                 </h2>
-                <div className="text-xl text-text-secondary leading-relaxed">
+                <div className="text-xl text-neutral-600 leading-relaxed">
                   {currentQ.subtitle.split('\n').map((line, index) => (
                     <p key={index} className={index > 0 ? 'mt-2' : ''}>
                       {line}
@@ -379,12 +379,12 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
               )}
 
               {/* Navigation */}
-              <div className="flex justify-between items-center pt-6 border-t border-border-default">
+              <div className="flex justify-between items-center pt-6 border-t border-soft-slate">
                 <button
                   type="button"
                   onClick={prevQuestion}
                   disabled={isFirstQuestion}
-                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 sm:px-6 py-2 sm:py-3 border border-soft-slate text-neutral-600 rounded-md hover:bg-soft-slate transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ← Previous
                 </button>
@@ -394,7 +394,7 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                     type="button"
                     onClick={nextQuestion}
                     disabled={!canProceed()}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 sm:px-8 py-3 sm:py-4 bg-lean-blue text-white rounded-md hover:bg-momentum-blue transition-all duration-200 font-semibold text-base sm:text-lg shadow-card hover:shadow-popover transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Continue →
                   </button>
@@ -402,12 +402,12 @@ export default function AssessmentForm({ onSubmit, isLoading }: AssessmentFormPr
                   <button
                     type="submit"
                     disabled={!canProceed() || isLoading}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 sm:px-8 py-3 sm:py-4 bg-lean-blue text-white rounded-md hover:bg-momentum-blue transition-all duration-200 font-semibold text-base sm:text-lg shadow-card hover:shadow-popover transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <span className="flex items-center">
                         <svg
-                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-text-onPrimary"
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
