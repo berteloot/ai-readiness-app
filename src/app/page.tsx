@@ -100,10 +100,12 @@ export default function Home() {
               />
             </div>
             
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-lean-blue rounded-full mb-6 sm:mb-8 shadow-card lsg-reveal">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-6 sm:mb-8 lsg-reveal">
+              <img 
+                src="/lsg_icon_ai-02.svg"
+                alt="AI Icon"
+                className="w-16 h-16 sm:w-20 sm:h-20"
+              />
             </div>
                         <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-midnight-core mb-6 sm:mb-8 leading-tight">
               Bridge the Gap Between Customer Experience (CX) Goals and AI Execution
@@ -114,19 +116,23 @@ export default function Home() {
             {/* Key Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto lsg-stagger">
               <div className="text-center p-4 sm:p-6 bg-white rounded-md shadow-card border border-soft-slate lsg-reveal">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-lean-blue rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-card">
-                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4">
+                  <img 
+                    src="/lsg_icon_star-02.svg"
+                    alt="Star Icon"
+                    className="w-12 h-12 sm:w-16 sm:h-16"
+                  />
                 </div>
                 <h3 className="font-bold text-midnight-core mb-2 sm:mb-3 text-base sm:text-lg">Comprehensive Evaluation</h3>
                 <p className="text-neutral-600 text-xs sm:text-sm leading-relaxed">9 key areas covering technology, data, workforce, and strategy</p>
               </div>
               <div className="text-center p-4 sm:p-6 bg-white rounded-md shadow-card border border-soft-slate lsg-reveal">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-solar-orange rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-card">
-                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4">
+                  <img 
+                    src="/lsg_icon_timer-02.svg"
+                    alt="Timer Icon"
+                    className="w-12 h-12 sm:w-16 sm:h-16"
+                  />
                 </div>
                 <h3 className="font-bold text-midnight-core mb-2 sm:mb-3 text-base sm:text-lg">Instant Delivery</h3>
                 <p className="text-neutral-600 text-xs sm:text-sm leading-relaxed">Detailed report sent directly to your email</p>
