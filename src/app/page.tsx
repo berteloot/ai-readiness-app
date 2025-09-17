@@ -124,7 +124,7 @@ export default function Home() {
                   />
                 </div>
                 <h3 className="font-bold text-midnight-core mb-2 sm:mb-3 text-base sm:text-lg">Comprehensive Evaluation</h3>
-                <p className="text-neutral-600 text-xs sm:text-sm leading-relaxed">9 key areas covering technology, data, workforce, and strategy</p>
+                <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">9 key areas covering technology, data, workforce, and strategy</p>
               </div>
               <div className="text-center p-4 sm:p-6 bg-white rounded-md shadow-card border border-soft-slate lsg-reveal">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4">
@@ -135,7 +135,7 @@ export default function Home() {
                   />
                 </div>
                 <h3 className="font-bold text-midnight-core mb-2 sm:mb-3 text-base sm:text-lg">Instant Delivery</h3>
-                <p className="text-neutral-600 text-xs sm:text-sm leading-relaxed">Detailed report sent directly to your email</p>
+                <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">Detailed report sent directly to your email</p>
               </div>
             </div>
           </div>
