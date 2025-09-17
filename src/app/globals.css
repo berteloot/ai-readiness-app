@@ -24,35 +24,35 @@ body {
 
 @layer components {
   .primary-gradient {
-    background: linear-gradient(135deg, #0099ff 0%, #006ef2 100%);
+    background: linear-gradient(135deg, var(--c-lean-blue) 0%, var(--c-momentum-blue) 100%);
   }
   
   .accent-gradient {
-    background: linear-gradient(135deg, #ff8221 0%, #ff8a4b 100%);
+    background: linear-gradient(135deg, var(--c-solar-orange) 0%, #ff8a4b 100%);
   }
   
   .primary-border {
-    border-color: #0099ff;
+    border-color: var(--c-lean-blue);
   }
   
   .accent-border {
-    border-color: #ff8221;
+    border-color: var(--c-solar-orange);
   }
   
   .primary-text {
-    color: #0099ff;
+    color: var(--c-lean-blue);
   }
   
   .accent-text {
-    color: #ff8221;
+    color: var(--c-solar-orange);
   }
   
   .primary-bg {
-    background-color: #0099ff;
+    background-color: var(--c-lean-blue);
   }
   
   .accent-bg {
-    background-color: #ff8221;
+    background-color: var(--c-solar-orange);
   }
   
   .question-card {
