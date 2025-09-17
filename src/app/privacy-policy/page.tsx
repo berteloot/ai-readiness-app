@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
           <div className="text-center">
             <Link href="/" className="inline-block mb-6">
               <img 
-                src="/LSG_Logo_Horizontal_RGB_Lean Blue.png"
+                src="/LSG_Logo_Horizontal_RGB_Lean%20Blue.png"
                 alt="Lean Solutions Group"
                 className="h-12 mx-auto"
               />

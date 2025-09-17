@@ -94,7 +94,7 @@ export default function Home() {
             {/* Lean Solutions Group Logo */}
             <div className="mb-8">
               <img 
-                src="/LSG_Logo_Horizontal_RGB_Lean Blue.png"
+                src="/LSG_Logo_Horizontal_RGB_Lean%20Blue.png"
                 alt="Lean Solutions Group"
                 className="h-[5.2rem] mx-auto"
               />

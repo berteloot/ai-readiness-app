@@ -39,7 +39,7 @@ const Logo: React.FC<LogoProps> = ({
           
           {/* Logo image */}
           <Image
-            src="/LSG_Logo_Horizontal_RGB_Lean Blue.png"
+            src="/LSG_Logo_Horizontal_RGB_Lean%20Blue.png"
             alt="Lean Solutions Group"
             width={size * 3}
             height={size}
@@ -71,7 +71,7 @@ const Logo: React.FC<LogoProps> = ({
           
           {/* Logo image - stacked */}
           <Image
-            src="/LSG_Logo_Horizontal_RGB_Lean Blue.png"
+            src="/LSG_Logo_Horizontal_RGB_Lean%20Blue.png"
             alt="Lean Solutions Group"
             width={size * 2.5}
             height={size * 0.8}
