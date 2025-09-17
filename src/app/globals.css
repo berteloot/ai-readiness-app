@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-family: 'FormaDJR', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Ensure all elements and controls inherit the font */
+*, *::before, *::after {
+  font-family: inherit;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
 body {
   font-family: 'FormaDJR', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #001f38;

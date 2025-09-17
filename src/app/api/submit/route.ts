@@ -379,7 +379,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
         body { 
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
           line-height: 1.6; 
-          color: #333; 
+          color: #001F38; 
           max-width: 600px; 
           margin: 0 auto; 
           padding: 20px; 
@@ -472,7 +472,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
         }
         .section-name {
           font-weight: 500;
-          color: #495057;
+          color: #001F38;
         }
         .section-score {
           font-weight: 700;
@@ -488,7 +488,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
         }
         .ai-report h3 {
           margin: 0 0 20px 0;
-          color: #495057;
+          color: #001F38;
           font-size: 20px;
           font-weight: 600;
         }
@@ -500,14 +500,14 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           font-size: 14px;
           line-height: 1.6;
-          color: #495057;
+          color: #001F38;
           white-space: pre-wrap;
         }
         .footer { 
           text-align: center; 
           margin-top: 30px; 
           padding: 25px; 
-          color: #6c757d; 
+          color: #001F38; 
           font-size: 14px;
           background: #f8f9fa;
           border-top: 1px solid #e9ecef;

@@ -1,43 +1,27 @@
-/* FormaDJR Font Definitions with Inter Fallback */
+/* FormaDJR local font faces */
 
+/* Variable font (preferred when supported) */
 @font-face {
   font-family: 'FormaDJR';
-  src: url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  src: url('/fonts/FormaDJR/FormaDJRCyrillicVariable-VF-Testing.ttf') format('truetype');
+  font-weight: 300 800;
+  font-style: normal;
   font-display: swap;
 }
 
-/* Alternative approach - using Google Fonts directly */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-/* FormaDJR would typically be loaded from a CDN or local files */
-/* For now, we'll use Inter as the primary font with FormaDJR as a future enhancement */
+/* Static Regular */
 @font-face {
   font-family: 'FormaDJR';
-  src: local('FormaDJR'), local('FormaDJR-Regular');
+  src: url('/fonts/FormaDJR/FormaDJRCyrillicText-Regular-Testing.otf') format('opentype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
+/* Static Bold */
 @font-face {
   font-family: 'FormaDJR';
-  src: local('FormaDJR-Medium'), local('FormaDJR Medium');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'FormaDJR';
-  src: local('FormaDJR-SemiBold'), local('FormaDJR SemiBold');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'FormaDJR';
-  src: local('FormaDJR-Bold'), local('FormaDJR Bold');
+  src: url('/fonts/FormaDJR/FormaDJRCyrillicText-Bold-Testing.otf') format('opentype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;

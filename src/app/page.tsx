@@ -96,18 +96,18 @@ export default function Home() {
               <img 
                 src="/LSG_Logo_Horizontal_RGB_Lean Blue.png"
                 alt="Lean Solutions Group"
-                className="h-16 mx-auto"
+                className="h-[5.2rem] mx-auto"
               />
             </div>
             
             <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-6 sm:mb-8 lsg-reveal">
               <img 
-                src="/lsg_icon_ai-02.svg"
+                src="/lsg_icon_ai-01.svg"
                 alt="AI Icon"
                 className="w-16 h-16 sm:w-20 sm:h-20"
               />
             </div>
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-midnight-core mb-6 sm:mb-8 leading-tight">
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-medium text-lean-blue uppercase mb-6 sm:mb-8 leading-tight">
               Bridge the Gap Between Customer Experience (CX) Goals and AI Execution
             </h2>
             <p className="text-lg sm:text-xl text-neutral-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
