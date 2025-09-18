@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { questions } from '@/data/questions';
 
 interface User {
   id: string;
@@ -33,6 +34,7 @@ interface Submission {
   aiReport: string;
   emailedAt: string | null;
   emailStatus: string | null;
+  answers: Record<string, string | string[]>; // stored raw values
 }
 
 export default function AdminPage() {
@@ -387,6 +389,20 @@ This action cannot be undone.`;
     
     if (submissionsToExport.length === 0) return;
 
+    // Prepare answer columns for all 11 questions: sector, region, q1..q9
+    const answerOrder = ['sector','region','q1','q2','q3','q4','q5','q6','q7','q8','q9'] as const;
+
+    const getQuestionById = (id: string) => (questions as any[]).find(q => q.id === id);
+    const optionLabel = (q: any, value: string) => (q?.options || []).find((o: any) => o.value === value)?.label || value;
+    const formatAnswer = (id: string, ans: string | string[] | undefined): string => {
+      const q = getQuestionById(id);
+      if (!ans) return '';
+      if (Array.isArray(ans)) return ans.map(v => optionLabel(q, v)).join('; ');
+      return optionLabel(q, ans);
+    };
+
+    const answerHeaders = answerOrder.map(id => getQuestionById(id)?.title || id);
+
     const headers = [
       'Date',
       'Email',
@@ -394,22 +410,27 @@ This action cannot be undone.`;
       'Score',
       'Tier',
       'Email Status',
-              'Challenges',
+      ...answerHeaders,
+      'Challenges',
       'AI Report'
     ];
 
     const csvContent = [
       headers.join(','),
-      ...submissionsToExport.map(submission => [
-        new Date(submission.createdAt).toLocaleDateString(),
-        submission.user.email,
-        submission.company,
-        submission.score,
-        submission.tier,
-        submission.emailStatus || 'Not sent',
-        submission.painPoints.join('; '),
-        submission.aiReport.replace(/"/g, '""') // Escape quotes
-      ].map(field => `"${field}"`).join(','))
+      ...submissionsToExport.map(submission => {
+        const answerValues = answerOrder.map(id => formatAnswer(id, submission.answers?.[id as keyof typeof submission.answers] as any));
+        return [
+          new Date(submission.createdAt).toLocaleDateString(),
+          submission.user.email,
+          submission.company,
+          submission.score,
+          submission.tier,
+          submission.emailStatus || 'Not sent',
+          ...answerValues,
+          submission.painPoints.join('; '),
+          submission.aiReport.replace(/\"/g, '""')
+        ].map(field => `"${field}"`).join(',');
+      })
     ].join('\n');
 
     const fileName = selectedSubmissions.size > 0 
