@@ -223,7 +223,7 @@ export default function ContactModal({ isOpen, onClose, onSubmit, onStartOver, i
             <div className="flex flex-col gap-4 pt-6 border-t border-border-default">
               {/* Learn More Button */}
               <a
-                href="https://www.leangroup.com/contact"
+                href="https://www.leangroup.com/contact-us"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 btn-primary text-center"
