@@ -123,14 +123,10 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.token) {
-          console.log('Login successful, setting token:', data.token);
           setAuthToken(data.token);
           setIsAuthenticated(true);
           localStorage.setItem('adminToken', data.token);
-          // Fetch data immediately after setting authentication state
-          console.log('Calling fetchSubmissions with token:', data.token);
           fetchSubmissions(data.token);
-          console.log('Calling fetchUsers with token:', data.token);
           fetchUsers(data.token);
         } else {
           setError('Login failed');
@@ -199,14 +195,9 @@ export default function AdminPage() {
     const currentToken = token || authToken;
     if (!currentToken) return;
     
-    console.log('fetchUsers - token param:', token ? 'provided' : 'not provided');
-    console.log('fetchUsers - authToken:', authToken ? 'set' : 'not set');
-    console.log('fetchUsers - currentToken:', currentToken ? 'set' : 'not set');
-    
     setIsLoadingUsers(true);
     setError('');
     try {
-      console.log('Fetching users...');
       const response = await fetch('/api/admin/users', {
         headers: {
           'Authorization': `Bearer ${currentToken}`

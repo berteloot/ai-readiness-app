@@ -6,6 +6,16 @@ import { convertMarkdownToSafeHTML } from '@/lib/sanitizer';
 import { z } from 'zod';
 
 
+// SECURITY: HTML-escape strings before interpolation into HTML templates
+function escapeHTML(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // SECURITY: Comprehensive input validation schemas
 const submitRequestSchema = z.object({
   email: z.string().email('Invalid email format').max(254, 'Email too long'),
@@ -35,7 +45,10 @@ const MAX_SUBMISSIONS_PER_WINDOW = 3; // Max 3 submissions per 15 minutes per IP
 // In-memory rate limiting store (use Redis in production)
 const submissionRateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
-const prisma = new PrismaClient();
+// Singleton PrismaClient to avoid multiple instances in dev/serverless
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 /**
  * Check rate limiting for submissions
@@ -73,10 +86,9 @@ function cleanupRateLimitStore() {
   }
 }
 
-// Clean up expired records every 5 minutes
-setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
-
 export async function POST(request: NextRequest) {
+  // Clean up expired rate limit records on each request (lightweight)
+  cleanupRateLimitStore();
   try {
     // SECURITY: Rate limiting check
     const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
@@ -110,10 +122,7 @@ export async function POST(request: NextRequest) {
     if (missingVars.length > 0) {
       console.error('Missing required environment variables:', missingVars);
       return NextResponse.json(
-        { 
-          error: 'Server configuration incomplete. Please contact support.',
-          details: `Missing: ${missingVars.join(', ')}`
-        },
+        { error: 'Server configuration incomplete. Please contact support.' },
         { status: 500 }
       );
     }
@@ -206,9 +215,6 @@ export async function POST(request: NextRequest) {
     let emailSent = false;
     try {
       console.log('Attempting to send email via SendGrid...');
-      console.log('SendGrid API Key:', process.env.SENDGRID_API_KEY ? 'Present' : 'Missing');
-      console.log('From Email:', process.env.SENDGRID_FROM_EMAIL || 'reports@yourdomain.com');
-      console.log('To Email:', email);
       
       const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
@@ -240,12 +246,9 @@ export async function POST(request: NextRequest) {
         }),
       });
 
-      console.log('SendGrid Response Status:', emailResponse.status);
-      console.log('SendGrid Response Headers:', Object.fromEntries(emailResponse.headers.entries()));
-
       if (emailResponse.ok) {
         emailSent = true;
-        console.log('Email sent successfully to:', email);
+        console.log('Email sent successfully');
       } else {
         const errorText = await emailResponse.text();
         console.error('SendGrid API error response:', errorText);
@@ -532,7 +535,7 @@ function generateEmailHTML(result: ScoreResult, aiReport: string, answers: Answe
         </div>
 
         <div class="content">
-          <div class="company-name">Company: ${company}</div>
+          <div class="company-name">Company: ${escapeHTML(company)}</div>
 
           <div class="score-card">
             <div class="score">${result.score}</div>
